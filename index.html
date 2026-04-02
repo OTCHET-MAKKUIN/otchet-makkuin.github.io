@@ -272,6 +272,60 @@ submitBtn.addEventListener('click', async function(){
         submitBtn.textContent = 'Изпрати';
     }
 });
+  // === ЗАРЕЖДАНЕ ОТ BACK4APP ===
+async function loadFromBack4App(){
+    try {
+        const ReportEntry = Parse.Object.extend("ReportEntry");
+        const query = new Parse.Query(ReportEntry);
+        query.limit(1000);
+        query.ascending("date");
+
+        const results = await query.find();
+
+        // чистим таблицата
+        reportTbody.innerHTML = '';
+
+        // нулираме месечните данни
+        monthlyData.forEach(row=>{
+            for(let i=1;i<11;i++){
+                if(i===8) row[i].textContent='';
+                else row[i].textContent='0.00';
+            }
+        });
+
+        // пълним наново
+        results.forEach(obj=>{
+            const dateVal = obj.get("date");
+            const option = obj.get("option");
+            const sumValue = obj.get("sum");
+            const notes = obj.get("notes") || '';
+
+            // месечна таблица
+            updateMonthlyTable(dateVal, option, sumValue, notes);
+
+            // отчет таблица
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${formatDate(dateVal)}</td>
+                <td>${option}</td>
+                <td>${sumValue.toFixed(2)}</td>
+                <td>${notes}</td>
+            `;
+            reportTbody.appendChild(tr);
+        });
+
+        // финален баланс
+        let allBalances = monthlyData.map(r=>parseFloat(r[10].textContent));
+        document.getElementById('finalBalance').textContent =
+            allBalances[allBalances.length-1].toFixed(2);
+
+    } catch(err){
+        console.error("Грешка при зареждане:", err);
+    }
+}
+
+// автоматично зареждане при стартиране
+loadFromBack4App();
 </script>
 </body>
 </html>
