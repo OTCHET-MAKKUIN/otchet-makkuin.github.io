@@ -35,17 +35,13 @@ button:hover:enabled { background: #5e35b1; }
 #reportTable { margin-top: 30px; border-collapse: collapse; }
 #reportTable th, #reportTable td { border: 1px solid #ccc; padding: 4px; font-size:8px; }
 #reportTable th { background: #eee; }
-
-/* Скриване на месечната таблица по подразбиране */
-#monthlyTableContainer {
-    display: none;
-}
+/* Скриване на месечната таблица преди парола */
+#monthlyTable, #monthlyTable + h3 { display:none; }
 </style>
-<!-- Parse SDK -->
 <script src="https://unpkg.com/parse/dist/parse.min.js"></script>
 <script>
-  Parse.initialize("nRZ2VJnuAxFbP1DPxK524AAL4rUh6avCTbTnQUsL", "MXB3Tw1iF1Cw1HrqKZFFUhf7DHETzaOezipXcPtw");
-  Parse.serverURL = 'https://parseapi.back4app.com/';
+Parse.initialize("nRZ2VJnuAxFbP1DPxK524AAL4rUh6avCTbTnQUsL", "MXB3Tw1iF1Cw1HrqKZFFUhf7DHETzaOezipXcPtw");
+Parse.serverURL = 'https://parseapi.back4app.com/';
 </script>
 </head>
 <body>
@@ -53,7 +49,12 @@ button:hover:enabled { background: #5e35b1; }
     <div class="header"></div>
     <div class="form-title"><h1>ОТЧЕТ</h1></div>
 
-    <!-- Дата -->
+    <div class="question-card" id="passwordCard">
+        <label>Въведете парола</label>
+        <input type="password" id="passwordInput" placeholder="Парола">
+        <button id="passwordBtn">Вход</button>
+    </div>
+
     <div class="question-card">
         <label>Дата</label>
         <div style="display:flex; align-items:center; gap:8px;">
@@ -66,7 +67,6 @@ button:hover:enabled { background: #5e35b1; }
         </div>
     </div>
 
-    <!-- Опция -->
     <div class="question-card">
         <label>Избери опция</label>
         <select id="optionSelect">
@@ -83,7 +83,6 @@ button:hover:enabled { background: #5e35b1; }
         </select>
     </div>
 
-    <!-- Сума -->
     <div class="question-card">
         <label>Въведете сума</label>
         <div class="currency-input">
@@ -92,18 +91,15 @@ button:hover:enabled { background: #5e35b1; }
         </div>
     </div>
 
-    <!-- Пояснения -->
     <div class="question-card">
         <label>Пояснения</label>
         <textarea rows="2" id="notes"></textarea>
     </div>
 
-    <!-- Изпрати -->
     <div class="submit-box">
         <button id="submitBtn" disabled>Изпрати</button>
     </div>
 
-    <!-- Таблица за текущи записи -->
     <table id="reportTable">
         <thead>
             <tr><th>Дата</th><th>Опция</th><th>Сума (€)</th><th>Пояснения</th></tr>
@@ -118,15 +114,7 @@ button:hover:enabled { background: #5e35b1; }
         </tfoot>
     </table>
 
-    <!-- Поле за парола -->
     <div class="question-card">
-        <label>Въведи парола за месечна база</label>
-        <input type="password" id="monthlyPassword" placeholder="Парола">
-        <button type="button" id="unlockMonthlyBtn">Покажи таблицата</button>
-    </div>
-
-    <!-- Месечна таблица -->
-    <div class="question-card" id="monthlyTableContainer">
         <h3>Месечна база</h3>
         <table id="monthlyTable">
             <thead>
@@ -147,10 +135,10 @@ button:hover:enabled { background: #5e35b1; }
             <tbody id="monthlyBody"></tbody>
         </table>
     </div>
-
 </div>
 
 <script>
+// Същата логика като преди, но показване на #monthlyTable след парола
 const submitBtn = document.getElementById('submitBtn');
 const optionSelect = document.getElementById('optionSelect');
 const sumInput = document.getElementById('sumInput');
@@ -159,15 +147,20 @@ const dateInput = document.getElementById('dateInput');
 const dateBtn = document.getElementById('dateBtn');
 const monthlyBody = document.getElementById('monthlyBody');
 const reportTbody = document.querySelector('#reportTable tbody');
+const monthlyTable = document.getElementById('monthlyTable');
+const passwordInput = document.getElementById('passwordInput');
+const passwordBtn = document.getElementById('passwordBtn');
 
-dateBtn.addEventListener('click', ()=>dateInput.showPicker?.()||dateInput.click());
+const CORRECT_PASSWORD = "1234"; // сложи своя парола тук
 
-function checkForm() {
-    submitBtn.disabled = !(dateInput.value && optionSelect.value && sumInput.value.trim());
-}
-dateInput.addEventListener('input', checkForm);
-optionSelect.addEventListener('input', checkForm);
-sumInput.addEventListener('input', checkForm);
+passwordBtn.addEventListener('click', ()=>{
+    if(passwordInput.value === CORRECT_PASSWORD){
+        document.getElementById('passwordCard').style.display='none';
+        monthlyTable.style.display='table';
+        monthlyTable.previousElementSibling.style.display='block'; // заглавие h3
+        loadReports(); // зареждане на Back4App данни
+    } else alert("Грешна парола!");
+});
 
 function formatDate(dateStr){
     if(!dateStr) return '';
@@ -177,6 +170,18 @@ function formatDate(dateStr){
     let year = d.getFullYear();
     return `${day}.${month}.${year}`;
 }
+function checkForm() {
+    submitBtn.disabled = !(dateInput.value && optionSelect.value && sumInput.value.trim());
+}
+dateInput.addEventListener('input', checkForm);
+optionSelect.addEventListener('input', checkForm);
+sumInput.addEventListener('input', function(){
+    this.value = this.value.replace(/[^0-9\.,]/g,'');
+    let parts = this.value.split(/[\.,]/);
+    this.value = parts.shift() + (parts.length?'.'+parts.join(''):'');
+    checkForm();
+});
+dateBtn.addEventListener('click', ()=>dateInput.showPicker?.()||dateInput.click());
 
 // Месечна таблица
 let monthlyData = [];
@@ -199,7 +204,6 @@ for(let day=1; day<=31; day++){
     monthlyData.push(cells);
 }
 
-// Обновяване на месечната таблица
 function updateMonthlyTable(dateStr, option, sumValue, notes=''){
     const day = new Date(dateStr).getDate();
     const row = monthlyData[day-1];
@@ -221,8 +225,6 @@ function updateMonthlyTable(dateStr, option, sumValue, notes=''){
         const caparoCell = row[8];
         caparoCell.textContent = (caparoCell.textContent==='0.00'?'':caparoCell.textContent+', ')+notes;
     }
-
-    // Баланс за всички дни
     let prevBalance = 0;
     for(let i=0;i<monthlyData.length;i++){
         let income=0, expense=0;
@@ -236,29 +238,19 @@ function updateMonthlyTable(dateStr, option, sumValue, notes=''){
     }
 }
 
-// Форматиране на сумата
-sumInput.addEventListener('input', function(){
-    this.value = this.value.replace(/[^0-9\.,]/g,'');
-    let parts = this.value.split(/[\.,]/);
-    this.value = parts.shift() + (parts.length?'.'+parts.join(''):'');
-    checkForm();
-});
-
-// Submit + Back4App
+// Изпращане и Back4App съхранение
 submitBtn.addEventListener('click', async function(){
     const selectedOption = optionSelect.value;
     const sumValueStr = sumInput.value.trim();
     const notes = notesInput.value.trim();
     const dateVal = dateInput.value;
     const sumValue = parseFloat(sumValueStr.replace(',','.'));
-
     if(isNaN(sumValue) || sumValue<=0) return;
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Изпращане…';
 
     try {
-        // Back4App клас "Reports"
         const Report = Parse.Object.extend("Reports");
         const report = new Report();
         report.set("date", dateVal);
@@ -267,7 +259,6 @@ submitBtn.addEventListener('click', async function(){
         report.set("notes", notes);
         await report.save();
 
-        // Обновяване на таблиците
         updateMonthlyTable(dateVal, selectedOption, sumValue, notes);
 
         const tr = document.createElement('tr');
@@ -277,38 +268,45 @@ submitBtn.addEventListener('click', async function(){
         let allBalances = monthlyData.map(r=>parseFloat(r[10].textContent));
         document.getElementById('finalBalance').textContent = allBalances[allBalances.length-1].toFixed(2);
 
-        // Нулиране на формата
         optionSelect.selectedIndex=0;
         sumInput.value='';
         notesInput.value='';
         dateInput.value='';
-        dateBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="#673ab7">
-                                <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 18H5V9h14v13zm-7-7h5v5h-5v-5z"/>
-                             </svg>`;
+        submitBtn.textContent = 'Изпрати';
         alert("Данните бяха изпратени успешно!");
-    } catch(err) {
-        alert("Грешка при изпращане: "+err.message);
+    } catch(err){
+        alert("Грешка при запис: "+err.message);
     } finally {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Изпрати';
     }
 });
 
-// Показване на месечната таблица чрез парола
-const unlockBtn = document.getElementById('unlockMonthlyBtn');
-const passwordInput = document.getElementById('monthlyPassword');
-const monthlyContainer = document.getElementById('monthlyTableContainer');
-const MONTHLY_PASSWORD = "mysecret123";
+// Зареждане на Back4App данни
+async function loadReports() {
+    const Report = Parse.Object.extend("Reports");
+    const query = new Parse.Query(Report);
+    query.ascending("date");
+    try {
+        const results = await query.find();
+        results.forEach(obj => {
+            const dateVal = obj.get("date");
+            const option = obj.get("option");
+            const sumValue = parseFloat(obj.get("sum"));
+            const notes = obj.get("notes") || '';
 
-unlockBtn.addEventListener('click', () => {
-    if(passwordInput.value === MONTHLY_PASSWORD){
-        monthlyContainer.style.display = 'block';
-        passwordInput.value = '';
-    } else {
-        alert("Грешна парола!");
-        passwordInput.value = '';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${formatDate(dateVal)}</td><td>${option}</td><td>${sumValue.toFixed(2)}</td><td>${notes}</td>`;
+            reportTbody.appendChild(tr);
+
+            updateMonthlyTable(dateVal, option, sumValue, notes);
+        });
+
+        let allBalances = monthlyData.map(r=>parseFloat(r[10].textContent));
+        document.getElementById('finalBalance').textContent = allBalances[allBalances.length-1].toFixed(2);
+    } catch(err) {
+        console.error("Грешка при зареждане на данни: ", err.message);
     }
-});
+}
 </script>
 </body>
 </html>
