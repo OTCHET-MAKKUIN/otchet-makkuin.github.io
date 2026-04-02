@@ -36,11 +36,10 @@ button:hover:enabled { background: #5e35b1; }
 #reportTable th, #reportTable td { border: 1px solid #ccc; padding: 4px; font-size:8px; }
 #reportTable th { background: #eee; }
 </style>
-<!-- Parse SDK за връзка с Back4App -->
 <script src="https://unpkg.com/parse/dist/parse.min.js"></script>
 <script>
-  Parse.initialize("nRZ2VJnuAxFbP1DPxK524AAL4rUh6avCTbTnQUsL", "MXB3Tw1iF1Cw1HrqKZFFUhf7DHETzaOezipXcPtw");
-  Parse.serverURL = 'https://parseapi.back4app.com/';
+Parse.initialize("nRZ2VJnuAxFbP1DPxK524AAL4rUh6avCTbTnQUsL", "MXB3Tw1iF1Cw1HrqKZFFUhf7DHETzaOezipXcPtw");
+Parse.serverURL = 'https://parseapi.back4app.com/';
 </script>
 </head>
 <body>
@@ -158,7 +157,7 @@ function formatDate(dateStr){
     return `${day}.${month}.${year}`;
 }
 
-// Създаваме месечната таблица
+// Месечна таблица
 let monthlyData = [];
 for(let day=1; day<=31; day++){
     const row = document.createElement('tr');
@@ -179,7 +178,7 @@ for(let day=1; day<=31; day++){
     monthlyData.push(cells);
 }
 
-// Обновяване на месечната таблица с натрупване
+// Обновяване на месечната таблица
 function updateMonthlyTable(dateStr, option, sumValue, notes=''){
     const day = new Date(dateStr).getDate();
     const row = monthlyData[day-1];
@@ -202,7 +201,6 @@ function updateMonthlyTable(dateStr, option, sumValue, notes=''){
         caparoCell.textContent = (caparoCell.textContent==='0.00'?'':caparoCell.textContent+', ')+notes;
     }
 
-    // Обновяване на баланс от първи до последен ден
     let prevBalance = 0;
     for(let i=0;i<monthlyData.length;i++){
         let income=0, expense=0;
@@ -223,7 +221,7 @@ sumInput.addEventListener('input', function(){
     checkForm();
 });
 
-// Submit с Back4App интеграция
+// Submit + Back4App запис
 submitBtn.addEventListener('click', async function(){
     const selectedOption = optionSelect.value;
     const sumValueStr = sumInput.value.trim();
@@ -272,6 +270,35 @@ submitBtn.addEventListener('click', async function(){
         submitBtn.textContent = 'Изпрати';
     }
 });
+
+// Зареждане на всички записи от Back4App при стартиране
+async function loadExistingData(){
+    const ReportEntry = Parse.Object.extend("ReportEntry");
+    const query = new Parse.Query(ReportEntry);
+    query.ascending("date");
+
+    try{
+        const results = await query.find();
+        for(const entry of results){
+            const dateVal = entry.get("date");
+            const option = entry.get("option");
+            const sumValue = parseFloat(entry.get("sum"));
+            const notes = entry.get("notes") || '';
+
+            updateMonthlyTable(dateVal, option, sumValue, notes);
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${formatDate(dateVal)}</td><td>${option}</td><td>${sumValue.toFixed(2)}</td><td>${notes}</td>`;
+            reportTbody.appendChild(tr);
+        }
+        let allBalances = monthlyData.map(r=>parseFloat(r[10].textContent));
+        document.getElementById('finalBalance').textContent = allBalances[allBalances.length-1].toFixed(2);
+    } catch(error){
+        console.error("Грешка при зареждане от Back4App:", error);
+    }
+}
+
+loadExistingData();
 </script>
 </body>
 </html>
