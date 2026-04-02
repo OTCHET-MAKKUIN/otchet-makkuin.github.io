@@ -13,31 +13,24 @@ body { margin: 0; background: #f0ebf8; font-family: 'Roboto', sans-serif; font-s
 h1 { margin: 0; font-size: 24px; }
 .question-card { background: #fff; padding: 15px 20px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 5px rgba(0,0,0,0.1); border-left: 4px solid #673ab7; }
 label { display:block; margin-bottom:4px; font-weight:500; }
-textarea, select, input[type="text"], input[type="date"], input[type="password"] { width: 100%; border: none; border-bottom: 2px solid #dadce0; padding: 4px 6px; font-size: 14px; background: transparent; }
+textarea, select, input[type="text"], input[type="date"] { width: 100%; border: none; border-bottom: 2px solid #dadce0; padding: 4px 6px; font-size: 14px; background: transparent; }
 textarea:focus, select:focus, input:focus { outline: none; border-bottom: 2px solid #673ab7; }
-select { appearance: none; background-repeat: no-repeat; background-position: right 5px center; background-size: 16px; cursor: pointer; }
+select { appearance: none; cursor: pointer; }
 .currency-input { position: relative; display: flex; align-items: center; }
 .currency-input .currency-left { position: absolute; left: 6px; font-weight: 500; color: #000; pointer-events: none; }
 .currency-input input { width: 100%; padding-left: 18px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background: #fff; }
 .submit-box { background: #fff; padding: 20px; border-radius: 8px; text-align: right; box-shadow: 0 1px 5px rgba(0,0,0,0.1); }
 button { background: #673ab7; color: #fff; border: none; padding: 10px 22px; border-radius: 4px; cursor: pointer; }
 button:disabled { background: #aaa; cursor: not-allowed; }
-button:hover:enabled { background: #5e35b1; }
-#monthlyTable, #reportTable { width: 100%; border-collapse: separate; border-spacing: 2px; margin-top: 20px; font-size: 8px; }
-#monthlyTable th, #monthlyTable td, #reportTable th, #reportTable td { padding: 2px 4px; text-align: center; border-radius: 5px; position: relative; font-size:8px; }
-.date-col { background: #f2f2f2cc; } 
-.expense-col { background: rgba(255,100,100,0.2); color: #800000; }
-.income-col { background: rgba(100,150,255,0.2); color: #003366; }
-.text-col { background: #f8f8f8cc; text-align: left; padding-left: 5px; }
-.balance-col { background: rgba(144,238,144,0.3); font-weight: bold; color: #155724; }
-#monthlyTable td.income-col::after, #monthlyTable td.expense-col::after, #monthlyTable td.balance-col::after { content: '€'; position: absolute; right: 3px; font-weight: bold; color: inherit; }
-#monthlyTable td.date-col::after, #monthlyTable td.text-col::after { content: ''; }
-#reportTable { margin-top: 30px; border-collapse: collapse; }
-#reportTable th, #reportTable td { border: 1px solid #ccc; padding: 4px; font-size:8px; }
-#reportTable th { background: #eee; }
-/* Скриване на месечната таблица преди парола */
-#monthlyTable, #monthlyTable + h3 { display:none; }
+#monthlyTable, #reportTable { width: 100%; border-spacing: 2px; margin-top: 20px; font-size: 8px; }
+#monthlyTable th, #monthlyTable td, #reportTable th, #reportTable td { padding: 2px 4px; text-align: center; border-radius: 5px; font-size:8px; }
+.expense-col { background: rgba(255,100,100,0.2); }
+.income-col { background: rgba(100,150,255,0.2); }
+.balance-col { background: rgba(144,238,144,0.3); font-weight: bold; }
+#reportTable { border-collapse: collapse; }
+#reportTable th, #reportTable td { border: 1px solid #ccc; padding: 4px; }
 </style>
+
 <script src="https://unpkg.com/parse/dist/parse.min.js"></script>
 <script>
 Parse.initialize("nRZ2VJnuAxFbP1DPxK524AAL4rUh6avCTbTnQUsL", "MXB3Tw1iF1Cw1HrqKZFFUhf7DHETzaOezipXcPtw");
@@ -45,268 +38,126 @@ Parse.serverURL = 'https://parseapi.back4app.com/';
 </script>
 </head>
 <body>
+
 <div class="container">
-    <div class="header"></div>
-    <div class="form-title"><h1>ОТЧЕТ</h1></div>
+<h1>ОТЧЕТ</h1>
 
-    <div class="question-card" id="passwordCard">
-        <label>Въведете парола</label>
-        <input type="password" id="passwordInput" placeholder="Парола">
-        <button id="passwordBtn">Вход</button>
-    </div>
+<input type="date" id="dateInput">
+<select id="optionSelect">
+<option disabled selected>Избери...</option>
+<option>ПРИХОД БАР МАККУИН</option>
+<option>РАЗХОД С ФАКТУРИ</option>
+</select>
 
-    <div class="question-card">
-        <label>Дата</label>
-        <div style="display:flex; align-items:center; gap:8px;">
-            <input type="date" id="dateInput" style="opacity:0; position:absolute; width:1px; height:1px;">
-            <button id="dateBtn" type="button" style="width:70px; height:70px; background:#f0f0f0; border:none; border-radius:12px; cursor:pointer; box-shadow:0 3px 6px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="#673ab7">
-                    <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 18H5V9h14v13zm-7-7h5v5h-5v-5z"/>
-                </svg>
-            </button>
-        </div>
-    </div>
+<input type="text" id="sumInput" placeholder="0.00">
+<textarea id="notes"></textarea>
 
-    <div class="question-card">
-        <label>Избери опция</label>
-        <select id="optionSelect">
-            <option disabled selected>Избери...</option>
-            <option>ПРИХОД БАР МАККУИН</option>
-            <option>ПРИХОД МАККУИН</option>
-            <option>ПРИХОД БАР СЪНСЕТ</option>
-            <option>ПРИХОД АНИМАТОР</option>
-            <option>ПРИХОД КАПАРО</option>
-            <option>ДУГИ ПРИХОДИ</option>
-            <option disabled>─────────────</option>
-            <option>РАЗХОД С ФАКТУРИ</option>
-            <option>РАЗХОД БЕЗ ФАКТУРИ</option>
-        </select>
-    </div>
+<button id="submitBtn" disabled>Изпрати</button>
 
-    <div class="question-card">
-        <label>Въведете сума</label>
-        <div class="currency-input">
-            <span class="currency-left">€</span>
-            <input type="text" placeholder="0.00" id="sumInput">
-        </div>
-    </div>
+<table id="reportTable">
+<thead><tr><th>Дата</th><th>Опция</th><th>Сума</th><th>Пояснения</th></tr></thead>
+<tbody></tbody>
+<tfoot><tr><td colspan="2">Салдо</td><td id="finalBalance">0.00</td></tr></tfoot>
+</table>
 
-    <div class="question-card">
-        <label>Пояснения</label>
-        <textarea rows="2" id="notes"></textarea>
-    </div>
+<table id="monthlyTable">
+<tbody id="monthlyBody"></tbody>
+</table>
 
-    <div class="submit-box">
-        <button id="submitBtn" disabled>Изпрати</button>
-    </div>
-
-    <table id="reportTable">
-        <thead>
-            <tr><th>Дата</th><th>Опция</th><th>Сума (€)</th><th>Пояснения</th></tr>
-        </thead>
-        <tbody></tbody>
-        <tfoot>
-            <tr>
-                <td colspan="2" class="balance">Крайно салдо:</td>
-                <td id="finalBalance" class="balance">0.00</td>
-                <td></td>
-            </tr>
-        </tfoot>
-    </table>
-
-    <div class="question-card">
-        <h3>Месечна база</h3>
-        <table id="monthlyTable">
-            <thead>
-                <tr>
-                    <th class="date-col">Дата</th>
-                    <th class="expense-col">РАЗХОД С ФАКТУРИ</th>
-                    <th class="expense-col">РАЗХОД БЕЗ ФАКТУРИ</th>
-                    <th class="income-col">ПРИХОД БАР МАККУИН</th>
-                    <th class="income-col">ПРИХОД МАККУИН</th>
-                    <th class="income-col">ПРИХОД БАР СЪНСЕТ</th>
-                    <th class="income-col">ПРИХОД АНИМАТОР</th>
-                    <th class="income-col">ПРИХОД КАПАРО</th>
-                    <th class="text-col">НОМЕР НА КАПАРОТО</th>
-                    <th class="income-col">ДУГИ ПРИХОДИ</th>
-                    <th class="balance-col">КРАЙНО САЛДО</th>
-                </tr>
-            </thead>
-            <tbody id="monthlyBody"></tbody>
-        </table>
-    </div>
 </div>
 
 <script>
-// Същата логика като преди, но показване на #monthlyTable след парола
 const submitBtn = document.getElementById('submitBtn');
 const optionSelect = document.getElementById('optionSelect');
 const sumInput = document.getElementById('sumInput');
 const notesInput = document.getElementById('notes');
 const dateInput = document.getElementById('dateInput');
-const dateBtn = document.getElementById('dateBtn');
-const monthlyBody = document.getElementById('monthlyBody');
 const reportTbody = document.querySelector('#reportTable tbody');
-const monthlyTable = document.getElementById('monthlyTable');
-const passwordInput = document.getElementById('passwordInput');
-const passwordBtn = document.getElementById('passwordBtn');
+const monthlyBody = document.getElementById('monthlyBody');
 
-const CORRECT_PASSWORD = "1234"; // сложи своя парола тук
+function checkForm(){
+submitBtn.disabled = !(dateInput.value && optionSelect.value && sumInput.value);
+}
+dateInput.oninput = checkForm;
+optionSelect.oninput = checkForm;
+sumInput.oninput = checkForm;
 
-passwordBtn.addEventListener('click', ()=>{
-    if(passwordInput.value === CORRECT_PASSWORD){
-        document.getElementById('passwordCard').style.display='none';
-        monthlyTable.style.display='table';
-        monthlyTable.previousElementSibling.style.display='block'; // заглавие h3
-        loadReports(); // зареждане на Back4App данни
-    } else alert("Грешна парола!");
+function formatDate(d){
+const date=new Date(d);
+return `${date.getDate()}.${date.getMonth()+1}.${date.getFullYear()}`;
+}
+
+let monthlyData=[];
+for(let i=0;i<31;i++){
+let tr=document.createElement('tr');
+let cells=[];
+for(let j=0;j<11;j++){
+let td=document.createElement('td');
+td.textContent='0.00';
+tr.appendChild(td);
+cells.push(td);
+}
+monthlyBody.appendChild(tr);
+monthlyData.push(cells);
+}
+
+function updateMonthlyTable(date,option,sum){
+let day=new Date(date).getDate()-1;
+monthlyData[day][3].textContent=(parseFloat(monthlyData[day][3].textContent)+sum).toFixed(2);
+}
+
+// submit
+submitBtn.onclick=async()=>{
+const Report=Parse.Object.extend("ReportEntry");
+const entry=new Report();
+
+const date=dateInput.value;
+const option=optionSelect.value;
+const sum=parseFloat(sumInput.value);
+const notes=notesInput.value;
+
+entry.set("date",date);
+entry.set("option",option);
+entry.set("sum",sum);
+entry.set("notes",notes);
+
+await entry.save();
+
+updateMonthlyTable(date,option,sum);
+
+let tr=document.createElement('tr');
+tr.innerHTML=`<td>${formatDate(date)}</td><td>${option}</td><td>${sum}</td><td>${notes}</td>`;
+reportTbody.appendChild(tr);
+};
+
+// 🔥 АВТОМАТИЧНО ЗАРЕЖДАНЕ
+async function loadReports(){
+const Report=Parse.Object.extend("ReportEntry");
+const query=new Parse.Query(Report);
+query.ascending("date");
+
+const results=await query.find();
+
+results.forEach(obj=>{
+const date=obj.get("date");
+const option=obj.get("option");
+const sum=parseFloat(obj.get("sum"));
+const notes=obj.get("notes");
+
+let tr=document.createElement('tr');
+tr.innerHTML=`<td>${formatDate(date)}</td><td>${option}</td><td>${sum}</td><td>${notes}</td>`;
+reportTbody.appendChild(tr);
+
+updateMonthlyTable(date,option,sum);
 });
 
-function formatDate(dateStr){
-    if(!dateStr) return '';
-    const d = new Date(dateStr);
-    let day = String(d.getDate()).padStart(2,'0');
-    let month = String(d.getMonth()+1).padStart(2,'0');
-    let year = d.getFullYear();
-    return `${day}.${month}.${year}`;
-}
-function checkForm() {
-    submitBtn.disabled = !(dateInput.value && optionSelect.value && sumInput.value.trim());
-}
-dateInput.addEventListener('input', checkForm);
-optionSelect.addEventListener('input', checkForm);
-sumInput.addEventListener('input', function(){
-    this.value = this.value.replace(/[^0-9\.,]/g,'');
-    let parts = this.value.split(/[\.,]/);
-    this.value = parts.shift() + (parts.length?'.'+parts.join(''):'');
-    checkForm();
-});
-dateBtn.addEventListener('click', ()=>dateInput.showPicker?.()||dateInput.click());
-
-// Месечна таблица
-let monthlyData = [];
-for(let day=1; day<=31; day++){
-    const row = document.createElement('tr');
-    const cells = [];
-    for(let i=0;i<11;i++){
-        const td = document.createElement('td');
-        td.style.fontSize='8px';
-        if(i===0) td.textContent = formatDate(`2026-04-${String(day).padStart(2,'0')}`);
-        else td.textContent = '0.00';
-        if(i===1 || i===2) td.className='expense-col';
-        if([3,4,5,6,7,9].includes(i)) td.className='income-col';
-        if(i===10) td.className='balance-col';
-        if(i===8) td.className='text-col';
-        row.appendChild(td);
-        cells.push(td);
-    }
-    monthlyBody.appendChild(row);
-    monthlyData.push(cells);
+let total=monthlyData.flat().reduce((a,b)=>a+parseFloat(b.textContent||0),0);
+document.getElementById('finalBalance').textContent=total.toFixed(2);
 }
 
-function updateMonthlyTable(dateStr, option, sumValue, notes=''){
-    const day = new Date(dateStr).getDate();
-    const row = monthlyData[day-1];
-    const mapping = {
-        "РАЗХОД С ФАКТУРИ":1,
-        "РАЗХОД БЕЗ ФАКТУРИ":2,
-        "ПРИХОД БАР МАККУИН":3,
-        "ПРИХОД МАККУИН":4,
-        "ПРИХОД БАР СЪНСЕТ":5,
-        "ПРИХОД АНИМАТОР":6,
-        "ПРИХОД КАПАРО":7,
-        "ДУГИ ПРИХОДИ":9
-    };
-    const colIndex = mapping[option];
-    if(colIndex!==undefined){
-        row[colIndex].textContent = (parseFloat(row[colIndex].textContent)+sumValue).toFixed(2);
-    }
-    if(option==="ПРИХОД КАПАРО" && notes){
-        const caparoCell = row[8];
-        caparoCell.textContent = (caparoCell.textContent==='0.00'?'':caparoCell.textContent+', ')+notes;
-    }
-    let prevBalance = 0;
-    for(let i=0;i<monthlyData.length;i++){
-        let income=0, expense=0;
-        for(let j=1;j<=9;j++){
-            if(j===8) continue;
-            const val=parseFloat(monthlyData[i][j].textContent);
-            if([1,2].includes(j)) expense+=val; else income+=val;
-        }
-        monthlyData[i][10].textContent = (prevBalance + income - expense).toFixed(2);
-        prevBalance = parseFloat(monthlyData[i][10].textContent);
-    }
-}
-
-// Изпращане и Back4App съхранение
-submitBtn.addEventListener('click', async function(){
-    const selectedOption = optionSelect.value;
-    const sumValueStr = sumInput.value.trim();
-    const notes = notesInput.value.trim();
-    const dateVal = dateInput.value;
-    const sumValue = parseFloat(sumValueStr.replace(',','.'));
-    if(isNaN(sumValue) || sumValue<=0) return;
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Изпращане…';
-
-    try {
-        const Report = Parse.Object.extend("Reports");
-        const report = new Report();
-        report.set("date", dateVal);
-        report.set("option", selectedOption);
-        report.set("sum", sumValue);
-        report.set("notes", notes);
-        await report.save();
-
-        updateMonthlyTable(dateVal, selectedOption, sumValue, notes);
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${formatDate(dateVal)}</td><td>${selectedOption}</td><td>${sumValue.toFixed(2)}</td><td>${notes}</td>`;
-        reportTbody.appendChild(tr);
-
-        let allBalances = monthlyData.map(r=>parseFloat(r[10].textContent));
-        document.getElementById('finalBalance').textContent = allBalances[allBalances.length-1].toFixed(2);
-
-        optionSelect.selectedIndex=0;
-        sumInput.value='';
-        notesInput.value='';
-        dateInput.value='';
-        submitBtn.textContent = 'Изпрати';
-        alert("Данните бяха изпратени успешно!");
-    } catch(err){
-        alert("Грешка при запис: "+err.message);
-    } finally {
-        submitBtn.disabled = true;
-    }
-});
-
-// Зареждане на Back4App данни
-async function loadReports() {
-    const Report = Parse.Object.extend("Reports");
-    const query = new Parse.Query(Report);
-    query.ascending("date");
-    try {
-        const results = await query.find();
-        results.forEach(obj => {
-            const dateVal = obj.get("date");
-            const option = obj.get("option");
-            const sumValue = parseFloat(obj.get("sum"));
-            const notes = obj.get("notes") || '';
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${formatDate(dateVal)}</td><td>${option}</td><td>${sumValue.toFixed(2)}</td><td>${notes}</td>`;
-            reportTbody.appendChild(tr);
-
-            updateMonthlyTable(dateVal, option, sumValue, notes);
-        });
-
-        let allBalances = monthlyData.map(r=>parseFloat(r[10].textContent));
-        document.getElementById('finalBalance').textContent = allBalances[allBalances.length-1].toFixed(2);
-    } catch(err) {
-        console.error("Грешка при зареждане на данни: ", err.message);
-    }
-}
+// стартира при load
+window.onload=loadReports;
 </script>
+
 </body>
 </html>
