@@ -26,9 +26,45 @@ button:disabled { background: #aaa; cursor: not-allowed; }
 .success { color: #2e7d32; }
 .error { color: #d32f2f; }
 
-/* Намалена ширина на таблиците */
-#monthlyTable, #currentTable { width: 100%; border-collapse: separate; border-spacing: 2px; margin-top: 20px; font-size: 8px; }
-#monthlyTable th, #monthlyTable td, #currentTable th, #currentTable td { padding: 2px 4px; text-align: center; border-radius: 5px; position: relative; font-size:8px; }
+/* КОНТЕЙНЕР ЗА СКРОЛВАНЕ - СЕГА Е РАЗПЪНАТ */
+.table-scroll-container {
+    width: 100%; /* Разпъната по ширината на контейнера */
+    max-height: 350px; 
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin: 20px 0;
+}
+
+#currentTable { 
+    width: 100%;
+    border-collapse: collapse; 
+    font-size: 11px;
+}
+#currentTable thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+#currentTable th { 
+    background: #546e7a; 
+    color: #fff; 
+    padding: 10px; 
+    text-transform: uppercase; 
+    letter-spacing: 0.5px;
+}
+#currentTable td { 
+    padding: 8px 10px; 
+    border-bottom: 1px solid #eee; 
+    text-align: center;
+}
+#currentTable tr:nth-child(even) { background-color: #f9f9f9; }
+
+/* МЕСЕЧНА ТАБЛИЦА */
+#monthlyTable { width: 800px; border-collapse: separate; border-spacing: 2px; margin-top: 20px; font-size: 8px; }
+#monthlyTable th, #monthlyTable td { padding: 2px 4px; text-align: center; border-radius: 5px; position: relative; }
 .date-col { background: #f2f2f2cc; } 
 .expense-col { background: rgba(255,100,100,0.2); color: #800000; }
 .income-col { background: rgba(100,150,255,0.2); color: #003366; }
@@ -99,12 +135,19 @@ Parse.serverURL = 'https://parseapi.back4app.com/';
         <button id="submitBtn" disabled>Изпрати</button>
     </div>
 
-    <table id="currentTable">
-        <thead>
-            <tr><th>Дата</th><th>Опция</th><th>Сума (€)</th><th>Пояснения</th></tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+    <div class="table-scroll-container" id="scrollContainer">
+        <table id="currentTable">
+            <thead>
+                <tr>
+                    <th>Дата</th>
+                    <th>Опция</th>
+                    <th>Сума (€)</th>
+                    <th>Бележки</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
     <div style="display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:20px;">
         <div id="passwordPrompt">
@@ -121,7 +164,7 @@ Parse.serverURL = 'https://parseapi.back4app.com/';
     </div>
 
     <div style="overflow-x:auto;">
-        <table id="monthlyTable" style="display:none; margin-top:30px; width: 800px;">
+        <table id="monthlyTable" style="display:none; margin-top:30px;">
             <thead>
                 <tr>
                     <th class="date-col">Дата</th>
@@ -145,7 +188,6 @@ Parse.serverURL = 'https://parseapi.back4app.com/';
 </div>
 
 <script>
-// === КОНФИГУРАЦИЯ ===
 const dateInput = document.getElementById('dateInput');
 const todayObj = new Date();
 const currentMonth = todayObj.getMonth() + 1;
@@ -166,7 +208,6 @@ const mapping = {
     "ПЛАЩАНЕ С КАРТА": 11
 };
 
-// === ГЕНЕРИРАНЕ НА ТАБЛИЦА ===
 let monthlyData = [];
 for(let day=1; day<=31; day++){
     const row = document.createElement('tr');
@@ -185,11 +226,11 @@ for(let day=1; day<=31; day++){
     monthlyData.push(Array.from(row.children));
 }
 
-// === СТРИКТЕН КОНТРОЛ НА ВХОДА ===
 const sumField = document.getElementById('amount_field');
 const optionField = document.getElementById('optionSelect');
 const submitBtn = document.getElementById('submitBtn');
 const statusMsg = document.getElementById('statusMsg');
+const scrollContainer = document.getElementById('scrollContainer');
 
 sumField.addEventListener('input', function() {
     this.value = this.value.replace(/[^0-9.]/g, '');
@@ -209,7 +250,13 @@ function showStatus(text, type) {
     setTimeout(() => { statusMsg.style.display = 'none'; }, 4000);
 }
 
-// === ПРЕИЗЧИСЛЯВАНЕ ===
+// ФУНКЦИЯ ЗА СКРОЛ ДО ДОЛУ
+function scrollToBottom() {
+    setTimeout(() => {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    }, 100);
+}
+
 function recalculate(allEntries) {
     monthlyData.forEach(row => {
         for(let i=1; i<13; i++) row[i].textContent = (i===9?'':'0.00');
@@ -246,9 +293,9 @@ function recalculate(allEntries) {
         row[12].textContent = runningBal.toFixed(2);
     }
     document.getElementById('currentCash').textContent = runningBal.toFixed(2) + ' €';
+    scrollToBottom(); // Скролване след преизчисляване
 }
 
-// === ГЛАВНО ИЗПРАЩАНЕ ===
 async function loadData(){
     try {
         const query = new Parse.Query("ReportEntry");
