@@ -195,7 +195,7 @@ function recalculate(allEntries) {
     const y = viewDate.getFullYear();
     const daysInMonth = new Date(y, m + 1, 0).getDate();
     document.getElementById('displayMonthYear').innerText = monthNames[m] + " " + y;
-    document.getElementById('cashLabel').innerText = "КАСА " + monthNames[m];
+    document.getElementById('cashLabel').innerText = "НАЛИЧНА КАСА";
 
     const mBody = document.getElementById('monthlyBody');
     mBody.innerHTML = '';
