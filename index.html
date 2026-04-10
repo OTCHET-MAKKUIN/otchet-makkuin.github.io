@@ -28,17 +28,19 @@ button:disabled { background: #aaa; cursor: not-allowed; }
 .success { color: #2e7d32; }
 .error { color: #d32f2f; }
 
-.table-scroll-container { width: 100%; max-height: 350px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 20px 0; scroll-behavior: smooth; }
-#currentTable { width: 100%; border-collapse: collapse; font-size: 11px; }
-#currentTable thead { position: sticky; top: 0; z-index: 10; }
-#currentTable th { background: #546e7a; color: #fff; padding: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-#currentTable td { padding: 8px 10px; border-bottom: 1px solid #eee; text-align: center; }
-#currentTable tr:nth-child(even) { background-color: #f9f9f9; }
+.history-scroll-container { width: 100%; max-height: 320px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; background: #fff; margin-bottom: 20px; scroll-behavior: smooth; }
+#historyTable, #currentTable { width: 100%; border-collapse: collapse; font-size: 11px; }
+#historyTable thead, #currentTable thead { position: sticky; top: 0; z-index: 10; }
+#historyTable th, #currentTable th { background: #546e7a; color: #fff; padding: 10px; text-transform: uppercase; }
+#historyTable td, #currentTable td { padding: 8px 10px; border-bottom: 1px solid #eee; text-align: center; }
+#historyTable tr:nth-child(even), #currentTable tr:nth-child(even) { background-color: #f9f9f9; }
 
-#monthlyTable { width: 1000px; border-collapse: separate; border-spacing: 2px; margin-top: 10px; font-size: 8px; }
-#monthlyTable th, #monthlyTable td { padding: 2px 4px; text-align: center; border-radius: 5px; position: relative; min-width: 45px; }
+#monthlyTable { width: 1000px; border-collapse: separate; border-spacing: 2px; margin-top: 10px; font-size: 10px; }
+#monthlyTable th { padding: 6px 2px; text-align: center; border-radius: 5px; font-size: 11px; line-height: 1.2; white-space: normal; vertical-align: middle; }
+#monthlyTable td { padding: 4px; text-align: center; border-radius: 5px; position: relative; min-width: 45px; }
+
 .date-col { background: #f2f2f2cc; } 
-.expense-col { background: rgba(255,100,100,0.2); color: #80; }
+.expense-col { background: rgba(255,100,100,0.2); color: #800000; }
 .income-col { background: rgba(100,150,255,0.2); color: #003366; }
 .text-col { background: #f8f8f8cc; text-align: left; padding-left: 5px; min-width: 100px; }
 .balance-col { background: rgba(144,238,144,0.3); font-weight: bold; color: #155724; }
@@ -56,8 +58,6 @@ Parse.serverURL = 'https://parseapi.back4app.com/';
 <div class="container">
     <div class="header"></div>
     <div class="form-title"><h1>ОТЧЕТ</h1></div>
-
-    <input type="hidden" id="dateInput">
 
     <div class="question-card">
         <label>Избери опция</label>
@@ -102,7 +102,7 @@ Parse.serverURL = 'https://parseapi.back4app.com/';
         <button id="submitBtn" disabled>Изпрати</button>
     </div>
 
-    <div class="table-scroll-container" id="scrollContainer">
+    <div style="width:100%; border:1px solid #ddd; border-radius:8px; background:#fff; margin-bottom:20px; overflow:hidden;">
         <table id="currentTable">
             <thead>
                 <tr><th>Дата</th><th>Опция</th><th>Сума (€)</th><th>Бележки</th></tr>
@@ -111,54 +111,64 @@ Parse.serverURL = 'https://parseapi.back4app.com/';
         </table>
     </div>
 
-    <div style="display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:20px;">
-        <div id="passwordPrompt">
-            <label>Парола за Месечна база:</label>
-            <input type="text" id="monthlyPassword" style="-webkit-text-security: disc; text-align:center; width:100px;" autocomplete="off">
-            <button id="checkPassword">Покажи база</button>
-            <p id="passError" style="color:red; display:none;">Грешна парола</p>
-        </div>
+    <div id="cashBox" style="background:#f5f5ff; border:2px solid #673ab7; border-radius:8px; padding:10px; width:140px; text-align:center; margin: 10px auto;">
+        <div id="cashLabel" style="font-size:10px; color:#555;">ТЕКУЩА КАСА</div>
+        <div id="currentCash" style="font-size:18px; font-weight:bold; color:#2e7d32;">0.00 €</div>
+    </div>
 
-        <div id="monthNav" style="display:none; justify-content: center; align-items: center; gap: 20px; margin-top: 10px;">
+    <div id="passwordPrompt" style="text-align: center; margin-top: 20px;">
+        <label>Парола за Месечна база:</label>
+        <input type="password" id="monthlyPassword" style="text-align:center; width:100px;">
+        <button id="checkPassword">Покажи база</button>
+    </div>
+
+    <div id="hiddenReportSection" style="display:none; width:100%; margin-top: 20px;">
+        <div id="monthNav" style="display:flex; justify-content: center; align-items: center; gap: 20px; margin-bottom: 15px;">
             <button onclick="changeMonth(-1)">◀ Назад</button>
-            <div id="displayMonthYear" style="font-weight:bold;"></div>
+            <div id="displayMonthYear" style="font-weight:bold; font-size: 16px;"></div>
             <button onclick="changeMonth(1)">Напред ▶</button>
         </div>
 
-        <div id="cashBox" style="background:#f5f5ff; border:2px solid #673ab7; border-radius:8px; padding:10px; min-width:140px; text-align:center;">
-            <div id="cashLabel" style="font-size:10px; color:#555;">ТЕКУЩА КАСА</div>
-            <div id="currentCash" style="font-size:18px; font-weight:bold; color:#2e7d32;">0.00 €</div>
+        <label style="font-weight: bold; margin-bottom: 5px; display: block; text-align: center;">ХРОНОЛОГИЯ НА ЗАПИСИТЕ ЗА МЕСЕЦА:</label>
+        <div class="history-scroll-container" id="historyScroll">
+            <table id="historyTable">
+                <thead>
+                    <tr><th>Дата</th><th>Опция</th><th>Сума (€)</th><th>Бележки</th></tr>
+                </thead>
+                <tbody id="historyBody"></tbody>
+            </table>
         </div>
-    </div>
 
-    <div style="overflow-x:auto;">
-        <table id="monthlyTable" style="display:none;">
-            <thead>
-                <tr>
-                    <th class="date-col">Дата</th>
-                    <th class="expense-col">РАЗХОД ФАКТУРИ</th>
-                    <th class="expense-col">РАЗХОД БЕЗ ФАКТ.</th>
-                    <th class="expense-col">АВАНС И ЗАПЛАТИ</th>
-                    <th class="income-col">БАР МАККУИН</th>
-                    <th class="income-col">МАККУИН</th>
-                    <th class="income-col">БАР СЪНСЕТ</th>
-                    <th class="income-col">АНИМАТОР</th>
-                    <th class="income-col">КАПАРО</th>
-                    <th class="text-col">№ НА КАПАРО</th>
-                    <th class="income-col">ДРУГИ</th>
-                    <th class="income-col">ПЛАЩАНЕ КАРТА</th>
-                    <th class="balance-col">КРАЙНО САЛДО</th>
-                    <th class="cash-col">КАСА</th>
-                </tr>
-            </thead>
-            <tbody id="monthlyBody"></tbody>
-            <tfoot id="monthlyFoot"></tfoot>
-        </table>
+        <div style="overflow-x:auto;">
+            <table id="monthlyTable">
+                <thead>
+                    <tr>
+                        <th class="date-col">Дата</th>
+                        <th class="expense-col">РАЗХОД<br>ФАКТУРИ</th>
+                        <th class="expense-col">РАЗХОД<br>БЕЗ ФАКТ.</th>
+                        <th class="expense-col">АВАНС И<br>ЗАПЛАТИ</th>
+                        <th class="income-col">БАР<br>МАККУИН</th>
+                        <th class="income-col">ПРИХОД<br>МАККУИН</th>
+                        <th class="income-col">БАР<br>СЪНСЕТ</th>
+                        <th class="income-col">ПРИХОД<br>АНИМАТОР</th>
+                        <th class="income-col">ПРИХОД<br>КАПАРО</th>
+                        <th class="text-col">№ НА<br>КАПАРО</th>
+                        <th class="income-col">ДРУГИ<br>ПРИХОДИ</th>
+                        <th class="income-col">ПЛАЩАНЕ<br>КАРТА</th>
+                        <th class="balance-col">КРАЙНО<br>САЛДО</th>
+                        <th class="cash-col">КАСА<br>НАЛИЧНОСТ</th>
+                    </tr>
+                </thead>
+                <tbody id="monthlyBody"></tbody>
+                <tfoot id="monthlyFoot"></tfoot>
+            </table>
+        </div>
     </div>
 </div>
 
 <script>
 const todayObj = new Date();
+const todayISO = todayObj.toLocaleDateString('sv-SE');
 let viewDate = new Date(todayObj.getFullYear(), todayObj.getMonth(), 1);
 const monthNames = ["ЯНУАРИ", "ФЕВРУАРИ", "МАРТ", "АПРИЛ", "МАЙ", "ЮНИ", "ЮЛИ", "АВГУСТ", "СЕПТЕМВРИ", "ОКТОМВРИ", "НОЕМВРИ", "ДЕКЕМВРИ"];
 const mapping = {
@@ -167,171 +177,181 @@ const mapping = {
     "ПРИХОД АНИМАТОР": 7, "ПРИХОД КАПАРО": 8, "ДУГИ ПРИХОДИ": 10, "ПЛАЩАНЕ С КАРТА": 11
 };
 
-function scrollToBottom() {
-    const container = document.getElementById('scrollContainer');
-    setTimeout(() => {
-        container.scrollTop = container.scrollHeight;
-    }, 150);
-}
-
 function checkForm() {
     const val = parseFloat(document.getElementById('amount_field').value);
-    document.getElementById('submitBtn').disabled = !(document.getElementById('optionSelect').value && !isNaN(val) && val > 0);
+    document.getElementById('submitBtn').disabled = !(document.getElementById('optionSelect').value && !isNaN(val));
 }
 document.getElementById('amount_field').addEventListener('input', checkForm);
 document.getElementById('optionSelect').addEventListener('change', checkForm);
 
-function showStatus(text, type) {
-    const msg = document.getElementById('statusMsg');
-    msg.textContent = text;
-    msg.className = type;
-    msg.style.display = 'block';
-    setTimeout(() => msg.style.display = 'none', 3000);
+function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); loadData(); }
+
+async function loadData() {
+    const query = new Parse.Query("ReportEntry");
+    query.limit(1000).ascending("date");
+    const results = await query.find();
+    render(results);
 }
 
-function changeMonth(dir) {
-    viewDate.setMonth(viewDate.getMonth() + dir);
-    loadData();
-}
-
-function recalculate(allEntries) {
-    const m = viewDate.getMonth();
-    const y = viewDate.getFullYear();
+function render(results) {
+    const m = viewDate.getMonth(), y = viewDate.getFullYear();
     const daysInMonth = new Date(y, m + 1, 0).getDate();
     document.getElementById('displayMonthYear').innerText = monthNames[m] + " " + y;
 
+    let globalCash = 0; 
+    let monthlyData = Array.from({length: daysInMonth}, () => new Array(14).fill(0));
+    let kaparoNotes = new Array(daysInMonth).fill("");
+    
+    const currentTBody = document.querySelector('#currentTable tbody');
+    const historyTBody = document.getElementById('historyBody');
+    currentTBody.innerHTML = '';
+    historyTBody.innerHTML = '';
+
+    results.sort((a,b) => a.get("date").localeCompare(b.get("date")));
+
+    // 1. Изчисляваме ТЕКУЩА КАСА и попълваме таблиците за детайли
+    results.forEach(e => {
+        const dStr = e.get("date"), entryDate = new Date(dStr);
+        const opt = e.get("option"), val = e.get("sum") || 0, col = mapping[opt];
+
+        if (opt !== "ПЛАЩАНЕ С КАРТА") {
+            const isExpense = (opt === "ИЗНЕСЕНИ ОТ КАСА" || [1,2,3].includes(col));
+            if (isExpense) globalCash -= val; else globalCash += val;
+        }
+
+        if(dStr === todayISO) {
+            currentTBody.innerHTML += `<tr><td>${entryDate.getDate()}.${entryDate.getMonth()+1}</td><td>${opt}</td><td>${val.toFixed(2)}</td><td>${e.get("notes")||''}</td></tr>`;
+        }
+
+        if(entryDate.getMonth() === m && entryDate.getFullYear() === y) {
+            historyTBody.innerHTML += `<tr><td>${entryDate.getDate()}.${entryDate.getMonth()+1}</td><td>${opt}</td><td>${val.toFixed(2)}</td><td>${e.get("notes")||''}</td></tr>`;
+            const dIdx = entryDate.getDate() - 1;
+            if(col && col !== 9) monthlyData[dIdx][col] += val;
+            if(opt === "ПРИХОД КАПАРО") kaparoNotes[dIdx] += (kaparoNotes[dIdx] ? ", " : "") + (e.get("notes") || "");
+        }
+    });
+
+    document.getElementById('currentCash').textContent = globalCash.toFixed(2) + ' €';
+    const hScroll = document.getElementById('historyScroll');
+    setTimeout(() => { hScroll.scrollTop = hScroll.scrollHeight; }, 100);
+
+    // 2. ИЗЧИСЛЯВАНЕ НА КРАЙНО САЛДО И КАСА НАЛИЧНОСТ (Кумулативно от началото на времето)
+    let runningCumulativeBalance = 0;
+    let runningCumulativeCash = 0;
+    let dailyBalances = {}; 
+    let dailyCashStates = {};
+
+    results.forEach(e => {
+        const dStr = e.get("date");
+        const opt = e.get("option"), val = e.get("sum") || 0, col = mapping[opt];
+        
+        // Салдо логика
+        if (opt !== "ПЛАЩАНЕ С КАРТА") {
+            const isExpense = (opt === "ИЗНЕСЕНИ ОТ КАСА" || [1,2,3].includes(col));
+            if (isExpense) runningCumulativeBalance -= val; else runningCumulativeBalance += val;
+        }
+
+        // Каса логика (по твоето правило: Изнасяне/Карта + | Внасяне -)
+        if(opt === "ИЗНЕСЕНИ ОТ КАСА" || opt === "ПЛАЩАНЕ С КАРТА") {
+            runningCumulativeCash += val;
+        } else if(opt === "ВНЕСЕНИ В КАСА") {
+            runningCumulativeCash -= val;
+        }
+
+        dailyBalances[dStr] = runningCumulativeBalance;
+        dailyCashStates[dStr] = runningCumulativeCash;
+    });
+
+    // 3. Рендиране на таблицата
     const mBody = document.getElementById('monthlyBody');
     mBody.innerHTML = '';
-    let monthlyRows = [];
     let colTotals = new Array(14).fill(0);
+    
+    let lastKnownBalance = 0;
+    let lastKnownCash = 0;
 
-    for(let d=1; d<=daysInMonth; d++){
+    // Намиране на състоянието в края на предходния месец
+    const startOfView = new Date(y, m, 1).toLocaleDateString('sv-SE');
+    results.forEach(e => { 
+        if(e.get("date") < startOfView) {
+            lastKnownBalance = dailyBalances[e.get("date")];
+            lastKnownCash = dailyCashStates[e.get("date")];
+        }
+    });
+
+    for(let i=1; i<=daysInMonth; i++) {
+        const currentDayStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+        
+        // Ако има запис за деня, обновяваме стойностите, иначе стоят от вчера
+        if (dailyBalances[currentDayStr] !== undefined) lastKnownBalance = dailyBalances[currentDayStr];
+        if (dailyCashStates[currentDayStr] !== undefined) lastKnownCash = dailyCashStates[currentDayStr];
+
         const row = document.createElement('tr');
-        for(let i=0; i<14; i++){
+        for(let j=0; j<14; j++) {
             const td = document.createElement('td');
-            if(i===0) td.textContent = `${d}.${m+1}`;
-            else td.textContent = ''; 
-            
-            if([1,2,3].includes(i)) td.className='expense-col';
-            if([4,5,6,7,8,10,11].includes(i)) td.className='income-col';
-            if(i===12) td.className='balance-col';
-            if(i===13) td.className='cash-col';
-            if(i===9) td.className='text-col';
+            if(j===0) td.textContent = `${i}.${m+1}`;
+            else if(j===9) td.textContent = kaparoNotes[i-1];
+            else if(j===12) { 
+                td.textContent = lastKnownBalance.toFixed(2); 
+                td.className='balance-col has-val'; 
+            }
+            else if(j===13) { 
+                td.textContent = lastKnownCash.toFixed(2); 
+                td.className='cash-col has-val'; 
+            }
+            else {
+                let v = monthlyData[i-1][j];
+                if(v !== 0) { td.textContent = v.toFixed(2); td.classList.add('has-val'); colTotals[j] += v; }
+            }
+            if([1,2,3].includes(j)) td.classList.add('expense-col');
+            if([4,5,6,7,8,10,11].includes(j)) td.classList.add('income-col');
             row.appendChild(td);
         }
         mBody.appendChild(row);
-        monthlyRows.push(Array.from(row.children));
     }
 
-    const todayISO = todayObj.toISOString().split('T')[0];
-    document.querySelector('#currentTable tbody').innerHTML = '';
-    let runningBal = 0;
-
-    for(let d=1; d<=daysInMonth; d++) {
-        const dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const dayEntries = allEntries.filter(e => e.get("date") === dStr);
-        const cells = monthlyRows[d-1];
-        
-        let dailyCashBalance = 0; 
-
-        dayEntries.forEach(e => {
-            const opt = e.get("option");
-            const val = e.get("sum");
-            const col = mapping[opt];
-
-            if(col && col !== 9) {
-                let curVal = parseFloat(cells[col].textContent) || 0;
-                cells[col].textContent = (curVal + val).toFixed(2);
-                cells[col].classList.add('has-val');
-                colTotals[col] += val;
-            }
-            if(opt === "ПРИХОД КАПАРО") cells[9].textContent = (cells[9].textContent ? cells[9].textContent + ', ' : '') + (e.get("notes") || '');
-            
-            // ЛОГИКА КАСА: (Карта + Изнесени) - Внесени
-            if (opt === "ПЛАЩАНЕ С КАРТА" || opt === "ИЗНЕСЕНИ ОТ КАСА") {
-                dailyCashBalance += val;
-            } else if (opt === "ВНЕСЕНИ В КАСА") {
-                dailyCashBalance -= val;
-            }
-
-            // САЛДО (Текуща наличност)
-            if (opt !== "ПЛАЩАНЕ С КАРТА") {
-                if (opt === "ИЗНЕСЕНИ ОТ КАСА" || [1,2,3].includes(col)) runningBal -= val;
-                else if (opt === "ВНЕСЕНИ В КАСА" || (col >= 4 && col <= 10)) runningBal += val;
-            }
-
-            if(dStr === todayISO) {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${d}.${m+1}.${y}</td><td>${opt}</td><td>${val.toFixed(2)}</td><td>${e.get("notes")||''}</td>`;
-                document.querySelector('#currentTable tbody').appendChild(tr);
-            }
-        });
-
-        cells[12].textContent = runningBal.toFixed(2);
-        cells[12].classList.add('has-val');
-
-        // Запис на КАСА за деня (вече с изваждане на внесените)
-        cells[13].textContent = dailyCashBalance.toFixed(2);
-        cells[13].classList.add('has-val');
-        colTotals[13] += dailyCashBalance;
-    }
-    document.getElementById('currentCash').textContent = runningBal.toFixed(2) + ' €';
-
-    // FOOTER
-    const mFoot = document.getElementById('monthlyFoot');
-    mFoot.innerHTML = '';
-    const fRow = document.createElement('tr');
-    fRow.className = 'total-row';
-    for(let i=0; i<14; i++){
+    // Totals
+    const fRow = document.createElement('tr'); fRow.className = 'total-row';
+    for(let j=0; j<14; j++) {
         const td = document.createElement('td');
-        if(i === 0) td.textContent = "ОБЩО:";
-        else if(i === 9) td.textContent = "";
-        else if(i === 12) td.textContent = runningBal.toFixed(2);
-        else {
-            td.textContent = colTotals[i].toFixed(2);
-        }
-        if(i !== 0 && i !== 9) td.classList.add('has-val');
+        if(j===0) td.textContent = "ОБЩО:";
+        else if(j===12) td.textContent = lastKnownBalance.toFixed(2);
+        else if(j===13) td.textContent = lastKnownCash.toFixed(2);
+        else if(j===9) td.textContent = "";
+        else { td.textContent = colTotals[j].toFixed(2); if(colTotals[j]!==0) td.classList.add('has-val'); }
         fRow.appendChild(td);
     }
-    mFoot.appendChild(fRow);
-    
-    scrollToBottom();
-}
-
-async function loadData(){
-    try {
-        const results = await new Parse.Query("ReportEntry").limit(1000).ascending("date").find();
-        recalculate(results);
-    } catch(e) { console.error(e); }
+    document.getElementById('monthlyFoot').innerHTML = '';
+    document.getElementById('monthlyFoot').appendChild(fRow);
 }
 
 document.getElementById('submitBtn').addEventListener('click', async () => {
-    const btn = document.getElementById('submitBtn');
-    btn.disabled = true;
+    const btn = document.getElementById('submitBtn'); btn.disabled = true;
     try {
-        const Entry = Parse.Object.extend("ReportEntry");
-        const entry = new Entry();
+        const Entry = Parse.Object.extend("ReportEntry"), entry = new Entry();
         await entry.save({
-            date: todayObj.toISOString().split('T')[0],
+            date: todayISO,
             option: document.getElementById('optionSelect').value,
             sum: parseFloat(document.getElementById('amount_field').value),
             notes: document.getElementById('notes').value.trim()
         });
-        showStatus("✅ Успешно изпратено!", "success");
-        document.getElementById('amount_field').value = '';
-        document.getElementById('notes').value = '';
-        document.getElementById('optionSelect').selectedIndex = 0;
+        document.getElementById('amount_field').value = ''; document.getElementById('notes').value = '';
         await loadData();
-    } catch(e) { showStatus("❌ Грешка!", "error"); }
+    } catch(e) { alert("Грешка!"); }
     finally { btn.disabled = false; checkForm(); }
 });
 
-document.getElementById('checkPassword').addEventListener('click', () => {
+function validatePassword() {
     if(document.getElementById('monthlyPassword').value === 'Flamingo3000'){
-        document.getElementById('monthlyTable').style.display = 'table';
-        document.getElementById('monthNav').style.display = 'flex';
+        document.getElementById('hiddenReportSection').style.display = 'block';
         document.getElementById('passwordPrompt').style.display = 'none';
-    } else { document.getElementById('passError').style.display = 'block'; }
+        loadData();
+    } else { alert("Грешна парола"); }
+}
+
+document.getElementById('checkPassword').addEventListener('click', validatePassword);
+document.getElementById('monthlyPassword').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') validatePassword();
 });
 
 loadData();
