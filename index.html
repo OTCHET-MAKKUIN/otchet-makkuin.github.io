@@ -35,27 +35,38 @@
         #historyTable td, #currentTable td { padding: 8px 10px; border-bottom: 1px solid #eee; text-align: center; }
         #historyTable tr:nth-child(even), #currentTable tr:nth-child(even) { background-color: #f9f9f9; }
 
-        .table-wrapper { overflow-x: auto; background: #fff; border-radius: 8px; border: 1px solid #ddd; padding: 5px; }
-        #monthlyTable { width: 1350px; border-collapse: separate; border-spacing: 2px; font-size: 10px; }
-        #monthlyTable th { padding: 8px 4px; text-align: center; border-radius: 4px; background: #546e7a; color: #fff; line-height: 1.2; }
-        #monthlyTable td { padding: 6px 4px; text-align: center; border-radius: 4px; min-width: 40px; vertical-align: middle; }
+        .table-wrapper { overflow-x: auto; background: #fff; border-radius: 8px; border: 1px solid #ddd; padding: 2px; }
+        #monthlyTable { width: 100%; min-width: 980px; border-collapse: separate; border-spacing: 1px; font-size: 9px; }
+        #monthlyTable th { padding: 4px 2px; text-align: center; border-radius: 3px; background: #546e7a; color: #fff; line-height: 1.1; font-size: 8.5px; }
+        #monthlyTable td { padding: 4px 1px; text-align: center; border-radius: 3px; min-width: 30px; vertical-align: middle; }
 
         .date-col { background: #f2f2f2cc; font-weight: bold; }
-        .expense-col { background: rgba(255,100,100,0.15); color: #800000; }
-        .income-col { background: rgba(100,150,255,0.15); color: #003366; }
+        .expense-col { background: rgba(255,100,100,0.12); color: #800000; }
+        .income-col { background: rgba(100,150,255,0.12); color: #003366; }
         
         .text-col { 
-            background: #fff !important; 
+            background: #fff; 
             text-align: center !important; 
-            min-width: 80px !important; 
-            border: 1.5px solid #999 !important; 
+            min-width: 65px !important; 
+            border: 1px solid #bbb !important; 
             box-sizing: border-box;
             color: #333;
         }
 
-        .balance-col { background: rgba(144,238,144,0.25); font-weight: bold; color: #155724; }
+        .balance-col { background: rgba(144,238,144,0.2); font-weight: bold; color: #155724; }
         .cash-col { background: #fff9c4; font-weight: bold; color: #856404; }
-        .total-balance-col { background: rgba(255, 0, 0, 0.1); font-weight: bold; color: #b71c1c; }
+        
+        .total-balance-col { 
+            background: rgba(255, 0, 0, 0.08); 
+            font-weight: bold; 
+            color: #b71c1c; 
+            border: 1px solid rgba(183, 28, 28, 0.3) !important;
+        }
+
+        .total-row { background: #37474f !important; color: #fff !important; font-weight: bold; }
+        .total-row td { border: none !important; background: inherit !important; color: inherit !important; }
+        
+        .has-val::after { content: '€'; margin-left:1px; font-size: 8px; opacity: 0.7; }
 
         .summary-boxes { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 20px; }
         .info-box { background: #fff; border: 2px solid #673ab7; border-radius: 8px; padding: 12px; min-width: 160px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
@@ -63,9 +74,6 @@
         .box-label { font-size: 10px; color: #555; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
         .box-value { font-size: 18px; font-weight: bold; }
         .box-subtext { font-size: 9px; color: #777; margin-top: 4px; line-height: 1.2; text-align: left; }
-        
-        .total-row { background: #37474f !important; color: #fff !important; font-weight: bold; }
-        .has-val::after { content: '€'; margin-left:1px; font-size: 9px; opacity: 0.8; }
     </style>
     <script src="https://unpkg.com/parse/dist/parse.min.js"></script>
     <script>
@@ -173,7 +181,7 @@
                         <th class="income-col">БАР<br>СЪНСЕТ</th>
                         <th class="income-col">ПРИХОД<br>АНИМАТОР</th>
                         <th class="income-col">ПРИХОД<br>КАПАРО</th>
-                        <th style="min-width: 80px;">№ НА<br>КАПАРО</th>
+                        <th style="min-width: 65px;">№ НА<br>КАПАРО</th>
                         <th class="income-col">ДРУГИ<br>ПРИХОДИ</th>
                         <th class="income-col">ПРИХОД ПО<br>БАНКА</th>
                         <th class="balance-col">ТЕКУЩА<br>КАСА</th>
@@ -186,7 +194,6 @@
             </table>
         </div>
 
-        <!-- Обобщаващи клетки под таблицата -->
         <div class="summary-boxes">
             <div class="info-box vat">
                 <div class="box-label">ДДС ЗА МЕСЕЦА</div>
@@ -203,7 +210,6 @@ const todayISO = todayObj.toLocaleDateString('sv-SE');
 let viewDate = new Date(todayObj.getFullYear(), todayObj.getMonth(), 1);
 const monthNames = ["ЯНУАРИ", "ФЕВРУАРИ", "МАРТ", "АПРИЛ", "МАЙ", "ЮНИ", "ЮЛИ", "АВГУСТ", "СЕПТЕМВРИ", "ОКТОМВРИ", "НОЕМВРИ", "ДЕКЕМВРИ"];
 
-// Константи за твърдите заплати
 const MRZ_EURO = 550; 
 const FIXED_SALARY_BASE = (4 * MRZ_EURO) + (2 * 1020); 
 
@@ -230,7 +236,7 @@ function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); loadDa
 
 async function loadData() {
     const query = new Parse.Query("ReportEntry");
-    query.limit(1000).ascending("date");
+    query.limit(5000).ascending("date");
     try {
         const results = await query.find();
         render(results);
@@ -260,22 +266,25 @@ function render(results) {
         const dStr = e.get("date"), entryDate = new Date(dStr);
         const opt = e.get("option"), val = e.get("sum") || 0, col = mapping[opt];
 
-        // ТЕКУЩА КАСА (Зелено каре) - Запазваме същата логика
+        // КУМУЛАТИВНА ТЕКУЩА КАСА (Зелено каре)
         if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" && !isBankIncome(opt)) {
             const isCashOut = (opt === "ИЗНЕСЕНИ ОТ КАСА" || [1,2,3].includes(col));
             if (isCashOut) globalCashDisplay -= val; else globalCashDisplay += val;
         }
 
+        // Днешни записи
         if(dStr === todayISO) {
             currentTBody.innerHTML += `<tr><td>${entryDate.getDate()}.${entryDate.getMonth()+1}</td><td>${opt}</td><td>${val.toFixed(2)}</td><td>${e.get("notes")||''}</td></tr>`;
         }
 
+        // Месечни данни за таблицата и ДДС
         if(entryDate.getMonth() === m && entryDate.getFullYear() === y) {
             historyTBody.innerHTML += `<tr><td>${entryDate.getDate()}.${entryDate.getMonth()+1}</td><td>${opt}</td><td>${val.toFixed(2)}</td><td>${e.get("notes")||''}</td></tr>`;
             const dIdx = entryDate.getDate() - 1;
             if(col) monthlyData[dIdx][col] += val;
             if(opt === "ПРИХОД КАПАРО") kaparoNotes[dIdx] += (kaparoNotes[dIdx] ? ", " : "") + (e.get("notes") || "");
 
+            // ДДС само за избрания месец
             if (col === 4 || col === 6 || (col === 11 && isBankIncome(opt))) {
                 incomeForVat += val;
             }
@@ -287,9 +296,10 @@ function render(results) {
 
     document.getElementById('currentCash').textContent = globalCashDisplay.toFixed(2) + ' €';
 
-    let runningCol12 = 0; // Текуща Каса (всички движения)
-    let runningCol13 = 0; // Каса Наличност (само касови трансфери)
-    let runningCol14Total = 0; // Текущ Баланс
+    // КУМУЛАТИВНИ САЛДА (Прехвърляне между месеци)
+    let runningCol12 = 0; 
+    let runningCol13 = 0; 
+    let runningCol14Total = 0; 
     
     let dailyCol12 = {}; 
     let dailyCol13 = {};
@@ -299,23 +309,21 @@ function render(results) {
         const dStr = e.get("date");
         const opt = e.get("option"), val = e.get("sum") || 0, col = mapping[opt];
         
-        // Колона 12 - Текуща Каса
+        // Салдо Текуща Каса
         if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" && !isBankIncome(opt)) {
             const isCashOut = (opt === "ИЗНЕСЕНИ ОТ КАСА" || [1,2,3].includes(col));
             if (isCashOut) runningCol12 -= val; else runningCol12 += val;
         }
 
-        // КОЛОНА 13 - КАСА НАЛИЧНОСТ (НОВА ЛОГИКА ПО ИЗИСКВАНЕ)
-        // Изважда само при: Захранване на банка и Внесени в каса
+        // Салдо Каса Наличност
         if (opt === "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" || opt === "ВНЕСЕНИ В КАСА") {
             runningCol13 -= val;
         } 
-        // Прибавя само при: Изнесени от каса
         else if (opt === "ИЗНЕСЕНИ ОТ КАСА") {
             runningCol13 += val;
         }
 
-        // Колона 14 - Текущ Баланс
+        // Салдо Текущ Баланс
         if ([1,2,3,4,5,6,7,8,10,11].includes(col)) {
             if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА") {
                 const isExpense = [1,2,3].includes(col);
@@ -331,11 +339,13 @@ function render(results) {
     const mBody = document.getElementById('monthlyBody');
     mBody.innerHTML = '';
     let colTotals = new Array(15).fill(0);
+    
+    // Начални салда за месеца (прехвърлени от предходни записи)
     let l12 = 0, l13 = 0;
-
-    const startOfView = new Date(y, m, 1).toLocaleDateString('sv-SE');
+    const startOfViewStr = `${y}-${String(m+1).padStart(2,'0')}-01`;
+    
     results.forEach(e => { 
-        if(e.get("date") < startOfView) {
+        if(e.get("date") < startOfViewStr) {
             l12 = dailyCol12[e.get("date")] || 0;
             l13 = dailyCol13[e.get("date")] || 0;
         }
@@ -343,9 +353,12 @@ function render(results) {
 
     for(let i=1; i<=daysInMonth; i++) {
         const currentDayStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+        
+        // Ако има движение за деня, обновяваме кумулативното салдо
         if (dailyCol12[currentDayStr] !== undefined) l12 = dailyCol12[currentDayStr];
         if (dailyCol13[currentDayStr] !== undefined) l13 = dailyCol13[currentDayStr];
 
+        // Дневен баланс (само за днешния ден)
         let dailyBalanceValue = 0;
         for(let cIdx of [4,5,6,7,8,10,11]) dailyBalanceValue += monthlyData[i-1][cIdx];
         for(let cIdx of [1,2,3]) dailyBalanceValue -= monthlyData[i-1][cIdx];
@@ -377,11 +390,15 @@ function render(results) {
         mBody.appendChild(row);
     }
 
+    // Футер с крайни кумулативни салда
     const fRow = document.createElement('tr'); fRow.className = 'total-row';
     const lastDayOfMonthStr = `${y}-${String(m+1).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`;
     let bestBalance = 0;
+    
     results.forEach(e => {
         if(e.get("date") <= lastDayOfMonthStr) {
+            bestBalance = dailyCol14Cumulative[e.get("date")];
+        } else if (bestBalance === 0 && e.get("date") < startOfViewStr) {
             bestBalance = dailyCol14Cumulative[e.get("date")];
         }
     });
@@ -392,13 +409,14 @@ function render(results) {
         else if(j===12) td.textContent = l12.toFixed(2);
         else if(j===13) td.textContent = l13.toFixed(2);
         else if(j===14) td.textContent = bestBalance.toFixed(2);
-        else if(j===9) { td.textContent = ""; td.className = 'text-col'; }
+        else if(j===9) { td.textContent = ""; }
         else { td.textContent = colTotals[j].toFixed(2); if(colTotals[j]!==0) td.classList.add('has-val'); }
         fRow.appendChild(td);
     }
     document.getElementById('monthlyFoot').innerHTML = '';
     document.getElementById('monthlyFoot').appendChild(fRow);
 
+    // ДДС Изчисление (Месечно)
     let vatOnIncome = incomeForVat / 6;
     let vatOnExpense = (invoicesForVat + FIXED_SALARY_BASE) / 6;
     let finalVat = vatOnIncome - vatOnExpense;
