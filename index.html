@@ -4,60 +4,103 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Форма Отчет - Маккуин</title>
-    <!-- Добавяне на вашето лого в таба на браузъра -->
-    <link rel="icon" type="image/png" href="logo-makkuin.png">
+    <!-- Пълен линк към иконата в GitHub -->
+    <link rel="icon" type="image/png" href="https://otchet-makkuin.github.io/zaplati/logo-makkuin.png">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; background: #f0ebf8; font-family: 'Roboto', sans-serif; font-size: 12px; }
-        .container { max-width: 1000px; margin: 40px auto; padding: 0 10px; }
+        body { 
+            margin: 0; 
+            background-color: #f0ebf8; 
+            /* Пълен линк за фоновото лого */
+            background-image: url('https://otchet-makkuin.github.io/zaplati/IMG_2002.png');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-attachment: fixed;
+            background-size: 50%; 
+            font-family: 'Roboto', sans-serif; 
+            font-size: 12px; 
+            min-height: 100vh;
+        }
+        
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(240, 235, 248, 0.7); 
+            z-index: -1;
+        }
+
+        .container { 
+            max-width: 1000px; 
+            margin: 40px auto; 
+            padding: 0 10px; 
+            position: relative; 
+            z-index: 1;
+        }
         .header { background: #673ab7; height: 10px; border-radius: 8px 8px 0 0; }
+        
         .form-title { 
-            background: #fff; 
-            padding: 24px; 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 15px 24px; 
             border-radius: 0 0 8px 8px; 
             box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
             margin-bottom: 15px; 
             text-align:center; 
             position: relative; 
-            min-height: 40px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
+            backdrop-filter: blur(5px);
         }
-        h1 { margin: 0; font-size: 22px; color: #333; }
+        h1 { margin: 0; font-size: 20px; color: #333; flex-grow: 1; }
         
-        /* Стил за малкия бутон в левия край */
         .nav-link-btn {
-            position: absolute;
-            left: 15px;
             background: #ff9800;
             color: #fff;
             text-decoration: none;
-            padding: 5px 12px;
-            border-radius: 15px;
+            padding: 8px 15px;
+            border-radius: 20px;
             font-weight: bold;
-            font-size: 10px;
+            font-size: 11px;
             transition: 0.3s;
             box-shadow: 0 2px 4px rgba(0,0,0,0.15);
             text-transform: uppercase;
-            z-index: 100;
+            white-space: nowrap;
         }
         .nav-link-btn:hover { background: #f57c00; transform: translateY(-1px); }
 
-        @media (max-width: 600px) {
-            .form-title { padding: 35px 15px 20px 15px; flex-direction: column; }
-            .nav-link-btn { position: static; margin-bottom: 10px; }
+        .title-logo-right {
+            height: 55px; 
+            width: auto;
+            object-fit: contain;
+            margin-left: 10px;
         }
 
-        .question-card { background: #fff; padding: 15px 20px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 5px rgba(0,0,0,0.1); border-left: 4px solid #673ab7; border-right: 4px solid #673ab7; }
+        @media (max-width: 600px) {
+            .form-title { padding: 15px; flex-direction: column; gap: 10px; }
+            h1 { order: 1; font-size: 18px; }
+            .nav-link-btn { order: 3; width: 100%; text-align: center; }
+            .title-logo-right { order: 2; height: 45px; margin: 0; }
+        }
+
+        .question-card { 
+            background: rgba(255, 255, 255, 0.98); 
+            padding: 15px 20px; 
+            border-radius: 8px; 
+            margin-bottom: 15px; 
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1); 
+            border-left: 4px solid #673ab7; 
+            border-right: 4px solid #673ab7; 
+        }
         label { display:block; margin-bottom:4px; font-weight:500; color: #555; }
         textarea, select, input[type="text"], input[type="tel"], input[type="password"] { width: 100%; border: none; border-bottom: 2px solid #dadce0; padding: 6px; font-size: 14px; background: transparent; box-sizing: border-box; }
         textarea:focus, select:focus, input:focus { outline: none; border-bottom: 2px solid #673ab7; }
-        select { appearance: none; cursor: pointer; }
+        
         .currency-input { position: relative; display: flex; align-items: center; }
         .currency-input .currency-left { position: absolute; left: 6px; font-weight: 500; color: #000; pointer-events: none; }
         .currency-input input { width: 100%; padding-left: 18px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background: #fff; height: 35px; }
-        .submit-box { background: #fff; padding: 20px; border-radius: 8px; text-align: right; box-shadow: 0 1px 5px rgba(0,0,0,0.1); margin: 0 auto 20px auto; }
+        
+        .submit-box { background: rgba(255, 255, 255, 0.98); padding: 20px; border-radius: 8px; text-align: right; box-shadow: 0 1px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
         button { background: #673ab7; color: #fff; border: none; padding: 10px 22px; border-radius: 4px; cursor: pointer; transition: 0.3s; font-weight: bold; }
         button:hover { background: #5e35b1; }
         button:disabled { background: #aaa; cursor: not-allowed; }
@@ -66,52 +109,33 @@
         .success { color: #2e7d32; }
         .error { color: #d32f2f; }
 
-        .history-scroll-container { width: 100%; max-height: 350px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; background: #fff; margin-bottom: 20px; scroll-behavior: smooth; }
+        .history-scroll-container { width: 100%; max-height: 350px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; background: rgba(255, 255, 255, 0.95); margin-bottom: 20px; scroll-behavior: smooth; }
         #historyTable, #currentTable { width: 100%; border-collapse: collapse; font-size: 11px; }
-        #historyTable thead, #currentTable thead { position: sticky; top: 0; z-index: 10; }
         #historyTable th, #currentTable th { background: #546e7a; color: #fff; padding: 10px; text-transform: uppercase; }
         #historyTable td, #currentTable td { padding: 8px 10px; border-bottom: 1px solid #eee; text-align: center; }
-        #historyTable tr:nth-child(even), #currentTable tr:nth-child(even) { background-color: #f9f9f9; }
 
-        .table-wrapper { overflow-x: auto; background: #fff; border-radius: 8px; border: 1px solid #ddd; padding: 2px; }
+        .table-wrapper { overflow-x: auto; background: rgba(255, 255, 255, 0.95); border-radius: 8px; border: 1px solid #ddd; padding: 2px; }
         #monthlyTable { width: 100%; min-width: 980px; border-collapse: separate; border-spacing: 1px; font-size: 9px; }
-        #monthlyTable th { padding: 4px 2px; text-align: center; border-radius: 3px; background: #546e7a; color: #fff; line-height: 1.1; font-size: 8.5px; }
-        #monthlyTable td { padding: 4px 1px; text-align: center; border-radius: 3px; min-width: 30px; vertical-align: middle; }
+        #monthlyTable th { padding: 4px 2px; background: #546e7a; color: #fff; font-size: 8.5px; }
+        #monthlyTable td { padding: 4px 1px; text-align: center; border-radius: 3px; min-width: 30px; }
 
-        .date-col { background: #f2f2f2cc; font-weight: bold; }
-        .expense-col { background: rgba(255,100,100,0.12); color: #800000; }
-        .income-col { background: rgba(100,150,255,0.12); color: #003366; }
-        
-        .text-col { 
-            background: #fff; 
-            text-align: center !important; 
-            min-width: 65px !important; 
-            border: 1px solid #bbb !important; 
-            box-sizing: border-box;
-            color: #333;
-        }
-
-        .balance-col { background: rgba(144,238,144,0.2); font-weight: bold; color: #155724; }
-        .cash-col { background: #fff9c4; font-weight: bold; color: #856404; }
-        
-        .total-balance-col { 
-            background: rgba(255, 0, 0, 0.08); 
-            font-weight: bold; 
-            color: #b71c1c; 
-            border: 1px solid rgba(183, 28, 28, 0.3) !important;
-        }
+        .date-col { background: rgba(242, 242, 242, 0.9); font-weight: bold; }
+        .expense-col { background: rgba(255,100,100,0.1); color: #800000; }
+        .income-col { background: rgba(100,150,255,0.1); color: #003366; }
+        .text-col { background: #fff; text-align: center !important; border: 1px solid #bbb !important; color: #333; font-size: 8px; line-height: 1; }
+        .balance-col { background: rgba(144,238,144,0.25); font-weight: bold; color: #155724; }
+        .cash-col { background: rgba(255, 249, 196, 0.9); font-weight: bold; color: #856404; }
+        .total-balance-col { background: rgba(255, 0, 0, 0.1); font-weight: bold; color: #b71c1c; border: 1px solid rgba(183, 28, 28, 0.3) !important; }
 
         .total-row { background: #37474f !important; color: #fff !important; font-weight: bold; }
-        .total-row td { border: none !important; background: inherit !important; color: inherit !important; }
-        
-        .has-val::after { content: '€'; margin-left:1px; font-size: 8px; opacity: 0.7; }
+        .has-val::after { content: '€'; margin-left:1px; font-size: 7px; opacity: 0.6; }
 
         .summary-boxes { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 20px; }
-        .info-box { background: #fff; border: 2px solid #673ab7; border-radius: 8px; padding: 12px; min-width: 160px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .info-box { background: rgba(255, 255, 255, 0.98); border: 2px solid #673ab7; border-radius: 8px; padding: 12px; min-width: 160px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .info-box.vat { border-color: #ff5722; }
-        .box-label { font-size: 10px; color: #555; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+        .box-label { font-size: 10px; color: #555; font-weight: bold; text-transform: uppercase; }
         .box-value { font-size: 18px; font-weight: bold; }
-        .box-subtext { font-size: 9px; color: #777; margin-top: 4px; line-height: 1.2; text-align: left; }
+        .box-subtext { font-size: 9px; color: #777; margin-top: 4px; text-align: left; }
     </style>
     <script src="https://unpkg.com/parse/dist/parse.min.js"></script>
     <script>
@@ -125,6 +149,8 @@
     <div class="form-title">
         <a href="https://otchet-makkuin.github.io/zaplati/" class="nav-link-btn" target="_blank">КЪМ ЗАПЛАТИ</a>
         <h1>ДНЕВЕН ОТЧЕТ</h1>
+        <!-- Пълен линк към логото в GitHub -->
+        <img src="https://otchet-makkuin.github.io/zaplati/IMG_2002.png" alt="Logo" class="title-logo-right" onerror="this.style.display='none'">
     </div>
 
     <div class="question-card">
@@ -171,7 +197,7 @@
         <button id="submitBtn" disabled>ИЗПРАТИ ЗАПИС</button>
     </div>
 
-    <div style="width:100%; border:1px solid #ddd; border-radius:8px; background:#fff; margin-bottom:20px; overflow:hidden;">
+    <div style="width:100%; border:1px solid #ddd; border-radius:8px; background:rgba(255, 255, 255, 0.8); margin-bottom:20px; overflow:hidden;">
         <table id="currentTable">
             <thead>
                 <tr><th>Дата</th><th>Опция</th><th>Сума (€)</th><th>Бележки</th></tr>
@@ -180,12 +206,12 @@
         </table>
     </div>
 
-    <div id="cashBox" style="background:#f5f5ff; border:2px solid #673ab7; border-radius:8px; padding:15px; width:180px; text-align:center; margin: 10px auto; box-shadow: 0 4px 10px rgba(103, 58, 183, 0.2);">
+    <div id="cashBox" style="background:rgba(245, 245, 255, 0.85); border:2px solid #673ab7; border-radius:8px; padding:15px; width:180px; text-align:center; margin: 10px auto; box-shadow: 0 4px 10px rgba(103, 58, 183, 0.2);">
         <div style="font-size:11px; color:#555; font-weight: bold; text-transform: uppercase; margin-bottom: 5px;">ТЕКУЩА КАСА (В БРОЙ)</div>
         <div id="currentCash" style="font-size:22px; font-weight:bold; color:#2e7d32;">0.00 €</div>
     </div>
 
-    <div id="passwordPrompt" style="text-align: center; margin-top: 30px; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 1px 5px rgba(0,0,0,0.1);">
+    <div id="passwordPrompt" style="text-align: center; margin-top: 30px; padding: 20px; background: rgba(255, 255, 255, 0.85); border-radius: 8px; box-shadow: 0 1px 5px rgba(0,0,0,0.1);">
         <label>Парола за Месечна база:</label>
         <input type="password" id="monthlyPassword" style="text-align:center; width:150px; margin: 10px 0;">
         <br>
@@ -199,8 +225,7 @@
             <button onclick="changeMonth(1)">Следващ ▶</button>
         </div>
 
-        <label style="font-weight: bold; margin-bottom: 10px; display: block; text-align: center; color: #444;">ХРОНОЛОГИЯ НА ЗАПИСИТЕ:</label>
-        <div class="history-scroll-container" id="historyScroll">
+        <div class="history-scroll-container">
             <table id="historyTable">
                 <thead>
                     <tr><th>Дата</th><th>Опция</th><th>Сума (€)</th><th>Бележки</th></tr>
@@ -322,40 +347,26 @@ function render(results) {
             if(col) monthlyData[dIdx][col] += val;
             if(opt === "ПРИХОД КАПАРО") kaparoNotes[dIdx] += (kaparoNotes[dIdx] ? ", " : "") + (e.get("notes") || "");
 
-            if (col === 4 || col === 6 || (col === 11 && isBankIncome(opt))) {
-                incomeForVat += val;
-            }
-            if (col === 1) {
-                invoicesForVat += val;
-            }
+            if (col === 4 || col === 6 || (col === 11 && isBankIncome(opt))) incomeForVat += val;
+            if (col === 1) invoicesForVat += val;
         }
     });
 
     document.getElementById('currentCash').textContent = globalCashDisplay.toFixed(2) + ' €';
 
-    let runningCol12 = 0; 
-    let runningCol13 = 0; 
-    let runningCol14Total = 0; 
-    
-    let dailyCol12 = {}; 
-    let dailyCol13 = {};
-    let dailyCol14Cumulative = {};
+    let runningCol12 = 0, runningCol13 = 0, runningCol14Total = 0;
+    let dailyCol12 = {}, dailyCol13 = {}, dailyCol14Cumulative = {};
 
     results.forEach(e => {
-        const dStr = e.get("date");
-        const opt = e.get("option"), val = e.get("sum") || 0, col = mapping[opt];
+        const dStr = e.get("date"), opt = e.get("option"), val = e.get("sum") || 0, col = mapping[opt];
         
         if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" && !isBankIncome(opt)) {
             const isCashOut = (opt === "ИЗНЕСЕНИ ОТ КАСА" || [1,2,3].includes(col));
             if (isCashOut) runningCol12 -= val; else runningCol12 += val;
         }
 
-        if (opt === "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" || opt === "ВНЕСЕНИ В КАСА") {
-            runningCol13 -= val;
-        } 
-        else if (opt === "ИЗНЕСЕНИ ОТ КАСА") {
-            runningCol13 += val;
-        }
+        if (opt === "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" || opt === "ВНЕСЕНИ В КАСА") runningCol13 -= val;
+        else if (opt === "ИЗНЕСЕНИ ОТ КАСА") runningCol13 += val;
 
         if ([1,2,3,4,5,6,7,8,10,11].includes(col)) {
             if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА") {
@@ -363,7 +374,6 @@ function render(results) {
                 if (isExpense) runningCol14Total -= val; else runningCol14Total += val;
             }
         }
-
         dailyCol12[dStr] = runningCol12;
         dailyCol13[dStr] = runningCol13;
         dailyCol14Cumulative[dStr] = runningCol14Total;
@@ -372,7 +382,6 @@ function render(results) {
     const mBody = document.getElementById('monthlyBody');
     mBody.innerHTML = '';
     let colTotals = new Array(15).fill(0);
-    
     let l12 = 0, l13 = 0;
     const startOfViewStr = `${y}-${String(m+1).padStart(2,'0')}-01`;
     
@@ -385,7 +394,6 @@ function render(results) {
 
     for(let i=1; i<=daysInMonth; i++) {
         const currentDayStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-        
         if (dailyCol12[currentDayStr] !== undefined) l12 = dailyCol12[currentDayStr];
         if (dailyCol13[currentDayStr] !== undefined) l13 = dailyCol13[currentDayStr];
 
@@ -410,7 +418,6 @@ function render(results) {
                 let v = monthlyData[i-1][j];
                 if(v !== 0) { td.textContent = v.toFixed(2); td.classList.add('has-val'); colTotals[j] += v; }
             }
-            
             if(j !== 9 && j < 12) {
                 if([1,2,3].includes(j)) td.classList.add('expense-col');
                 if([4,5,6,7,8,10,11].includes(j)) td.classList.add('income-col');
@@ -420,40 +427,30 @@ function render(results) {
         mBody.appendChild(row);
     }
 
-    const fRow = document.createElement('tr'); fRow.className = 'total-row';
     const lastDayOfMonthStr = `${y}-${String(m+1).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`;
     let bestBalance = 0;
-    
     results.forEach(e => {
-        if(e.get("date") <= lastDayOfMonthStr) {
-            bestBalance = dailyCol14Cumulative[e.get("date")];
-        } else if (bestBalance === 0 && e.get("date") < startOfViewStr) {
-            bestBalance = dailyCol14Cumulative[e.get("date")];
-        }
+        if(e.get("date") <= lastDayOfMonthStr) bestBalance = dailyCol14Cumulative[e.get("date")];
+        else if (bestBalance === 0 && e.get("date") < startOfViewStr) bestBalance = dailyCol14Cumulative[e.get("date")];
     });
 
+    const fRow = document.createElement('tr'); fRow.className = 'total-row';
     for(let j=0; j<15; j++) {
         const td = document.createElement('td');
         if(j===0) td.textContent = "ОБЩО:";
         else if(j===12) td.textContent = l12.toFixed(2);
         else if(j===13) td.textContent = l13.toFixed(2);
         else if(j===14) td.textContent = bestBalance.toFixed(2);
-        else if(j===9) { td.textContent = ""; }
         else { td.textContent = colTotals[j].toFixed(2); if(colTotals[j]!==0) td.classList.add('has-val'); }
         fRow.appendChild(td);
     }
     document.getElementById('monthlyFoot').innerHTML = '';
     document.getElementById('monthlyFoot').appendChild(fRow);
 
-    let vatOnIncome = incomeForVat / 6;
-    let vatOnExpense = (invoicesForVat + FIXED_SALARY_BASE) / 6;
+    let vatOnIncome = incomeForVat / 6, vatOnExpense = (invoicesForVat + FIXED_SALARY_BASE) / 6;
     let finalVat = vatOnIncome - vatOnExpense;
-    
     document.getElementById('monthlyVat').textContent = finalVat.toFixed(2) + ' €';
-    document.getElementById('vatFormulaText').innerHTML = 
-        `<strong>Приход (ДДС):</strong> ${vatOnIncome.toFixed(2)}€<br>` +
-        `<strong>Разход (ДДС):</strong> ${vatOnExpense.toFixed(2)}€<br>` +
-        `<small>(4x${MRZ_EURO}€ + 2x1020€ + Фактури)</small>`;
+    document.getElementById('vatFormulaText').innerHTML = `<strong>Приход (ДДС):</strong> ${vatOnIncome.toFixed(2)}€<br><strong>Разход (ДДС):</strong> ${vatOnExpense.toFixed(2)}€<br><small>(4x${MRZ_EURO}€ + 2x1020€ + Фактури)</small>`;
 }
 
 document.getElementById('submitBtn').addEventListener('click', async () => {
