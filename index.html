@@ -4,13 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Форма Отчет - Маккуин</title>
+    <!-- Добавяне на вашето лого в таба на браузъра -->
+    <link rel="icon" type="image/png" href="logo-makkuin.png">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; background: #f0ebf8; font-family: 'Roboto', sans-serif; font-size: 12px; }
         .container { max-width: 1000px; margin: 40px auto; padding: 0 10px; }
         .header { background: #673ab7; height: 10px; border-radius: 8px 8px 0 0; }
-        .form-title { background: #fff; padding: 24px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-bottom: 15px; text-align:center; }
-        h1 { margin: 0; font-size: 24px; color: #333; }
+        .form-title { 
+            background: #fff; 
+            padding: 24px; 
+            border-radius: 0 0 8px 8px; 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
+            margin-bottom: 15px; 
+            text-align:center; 
+            position: relative; 
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        h1 { margin: 0; font-size: 22px; color: #333; }
+        
+        /* Стил за малкия бутон в левия край */
+        .nav-link-btn {
+            position: absolute;
+            left: 15px;
+            background: #ff9800;
+            color: #fff;
+            text-decoration: none;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 10px;
+            transition: 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            text-transform: uppercase;
+            z-index: 100;
+        }
+        .nav-link-btn:hover { background: #f57c00; transform: translateY(-1px); }
+
+        @media (max-width: 600px) {
+            .form-title { padding: 35px 15px 20px 15px; flex-direction: column; }
+            .nav-link-btn { position: static; margin-bottom: 10px; }
+        }
+
         .question-card { background: #fff; padding: 15px 20px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 5px rgba(0,0,0,0.1); border-left: 4px solid #673ab7; border-right: 4px solid #673ab7; }
         label { display:block; margin-bottom:4px; font-weight:500; color: #555; }
         textarea, select, input[type="text"], input[type="tel"], input[type="password"] { width: 100%; border: none; border-bottom: 2px solid #dadce0; padding: 6px; font-size: 14px; background: transparent; box-sizing: border-box; }
@@ -84,7 +122,10 @@
 <body>
 <div class="container">
     <div class="header"></div>
-    <div class="form-title"><h1>ДНЕВЕН ОТЧЕТ</h1></div>
+    <div class="form-title">
+        <a href="https://otchet-makkuin.github.io/zaplati/" class="nav-link-btn" target="_blank">КЪМ ЗАПЛАТИ</a>
+        <h1>ДНЕВЕН ОТЧЕТ</h1>
+    </div>
 
     <div class="question-card">
         <label>Избери опция</label>
@@ -266,25 +307,21 @@ function render(results) {
         const dStr = e.get("date"), entryDate = new Date(dStr);
         const opt = e.get("option"), val = e.get("sum") || 0, col = mapping[opt];
 
-        // КУМУЛАТИВНА ТЕКУЩА КАСА (Зелено каре)
         if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" && !isBankIncome(opt)) {
             const isCashOut = (opt === "ИЗНЕСЕНИ ОТ КАСА" || [1,2,3].includes(col));
             if (isCashOut) globalCashDisplay -= val; else globalCashDisplay += val;
         }
 
-        // Днешни записи
         if(dStr === todayISO) {
             currentTBody.innerHTML += `<tr><td>${entryDate.getDate()}.${entryDate.getMonth()+1}</td><td>${opt}</td><td>${val.toFixed(2)}</td><td>${e.get("notes")||''}</td></tr>`;
         }
 
-        // Месечни данни за таблицата и ДДС
         if(entryDate.getMonth() === m && entryDate.getFullYear() === y) {
             historyTBody.innerHTML += `<tr><td>${entryDate.getDate()}.${entryDate.getMonth()+1}</td><td>${opt}</td><td>${val.toFixed(2)}</td><td>${e.get("notes")||''}</td></tr>`;
             const dIdx = entryDate.getDate() - 1;
             if(col) monthlyData[dIdx][col] += val;
             if(opt === "ПРИХОД КАПАРО") kaparoNotes[dIdx] += (kaparoNotes[dIdx] ? ", " : "") + (e.get("notes") || "");
 
-            // ДДС само за избрания месец
             if (col === 4 || col === 6 || (col === 11 && isBankIncome(opt))) {
                 incomeForVat += val;
             }
@@ -296,7 +333,6 @@ function render(results) {
 
     document.getElementById('currentCash').textContent = globalCashDisplay.toFixed(2) + ' €';
 
-    // КУМУЛАТИВНИ САЛДА (Прехвърляне между месеци)
     let runningCol12 = 0; 
     let runningCol13 = 0; 
     let runningCol14Total = 0; 
@@ -309,13 +345,11 @@ function render(results) {
         const dStr = e.get("date");
         const opt = e.get("option"), val = e.get("sum") || 0, col = mapping[opt];
         
-        // Салдо Текуща Каса
         if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" && !isBankIncome(opt)) {
             const isCashOut = (opt === "ИЗНЕСЕНИ ОТ КАСА" || [1,2,3].includes(col));
             if (isCashOut) runningCol12 -= val; else runningCol12 += val;
         }
 
-        // Салдо Каса Наличност
         if (opt === "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" || opt === "ВНЕСЕНИ В КАСА") {
             runningCol13 -= val;
         } 
@@ -323,7 +357,6 @@ function render(results) {
             runningCol13 += val;
         }
 
-        // Салдо Текущ Баланс
         if ([1,2,3,4,5,6,7,8,10,11].includes(col)) {
             if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА") {
                 const isExpense = [1,2,3].includes(col);
@@ -340,7 +373,6 @@ function render(results) {
     mBody.innerHTML = '';
     let colTotals = new Array(15).fill(0);
     
-    // Начални салда за месеца (прехвърлени от предходни записи)
     let l12 = 0, l13 = 0;
     const startOfViewStr = `${y}-${String(m+1).padStart(2,'0')}-01`;
     
@@ -354,11 +386,9 @@ function render(results) {
     for(let i=1; i<=daysInMonth; i++) {
         const currentDayStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
         
-        // Ако има движение за деня, обновяваме кумулативното салдо
         if (dailyCol12[currentDayStr] !== undefined) l12 = dailyCol12[currentDayStr];
         if (dailyCol13[currentDayStr] !== undefined) l13 = dailyCol13[currentDayStr];
 
-        // Дневен баланс (само за днешния ден)
         let dailyBalanceValue = 0;
         for(let cIdx of [4,5,6,7,8,10,11]) dailyBalanceValue += monthlyData[i-1][cIdx];
         for(let cIdx of [1,2,3]) dailyBalanceValue -= monthlyData[i-1][cIdx];
@@ -390,7 +420,6 @@ function render(results) {
         mBody.appendChild(row);
     }
 
-    // Футер с крайни кумулативни салда
     const fRow = document.createElement('tr'); fRow.className = 'total-row';
     const lastDayOfMonthStr = `${y}-${String(m+1).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`;
     let bestBalance = 0;
@@ -416,7 +445,6 @@ function render(results) {
     document.getElementById('monthlyFoot').innerHTML = '';
     document.getElementById('monthlyFoot').appendChild(fRow);
 
-    // ДДС Изчисление (Месечно)
     let vatOnIncome = incomeForVat / 6;
     let vatOnExpense = (invoicesForVat + FIXED_SALARY_BASE) / 6;
     let finalVat = vatOnIncome - vatOnExpense;
