@@ -4,14 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Форма Отчет - Маккуин</title>
-    <!-- Пълен линк към иконата в GitHub -->
     <link rel="icon" type="image/png" href="https://otchet-makkuin.github.io/zaplati/logo-makkuin.png">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body { 
             margin: 0; 
             background-color: #f0ebf8; 
-            /* Пълен линк за фоновото лого */
             background-image: url('https://otchet-makkuin.github.io/zaplati/IMG_2002.png');
             background-repeat: no-repeat;
             background-position: center center;
@@ -149,7 +147,6 @@
     <div class="form-title">
         <a href="https://otchet-makkuin.github.io/zaplati/" class="nav-link-btn">КЪМ ЗАПЛАТИ</a>
         <h1>ДНЕВЕН ОТЧЕТ</h1>
-        <!-- Пълен линк към логото в GitHub -->
         <img src="https://otchet-makkuin.github.io/zaplati/IMG_2002.png" alt="Logo" class="title-logo-right" onerror="this.style.display='none'">
     </div>
 
@@ -168,7 +165,7 @@
                 <option>ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА</option>
             </optgroup>
             <optgroup label="РАЗХОДИ">
-                <option>РАЗХОД С ФАКТУРИ</option>
+                <option>РАЗХОД С ФАКТУРИ ПО БАНКА</option> <option>РАЗХОД С ФАКТУРИ</option>
                 <option>РАЗХОД БЕЗ ФАКТУРИ</option>
                 <option>ЗАПЛАТА/АВАНС</option>
             </optgroup>
@@ -280,15 +277,23 @@ const MRZ_EURO = 550;
 const FIXED_SALARY_BASE = (4 * MRZ_EURO) + (2 * 1020); 
 
 const mapping = {
-    "РАЗХОД С ФАКТУРИ": 1, "РАЗХОД БЕЗ ФАКТУРИ": 2, "ЗАПЛАТА/АВАНС": 3,
-    "ПРИХОД БАР МАККУИН": 4, "ПРИХОД МАККУИН": 5, "ПРИХОД БАР СЪНСЕТ": 6,
-    "ПРИХОД АНИМАТОР": 7, "ПРИХОД КАПАРО": 8, "ДУГИ ПРИХОДИ": 10, 
-    "ПРИХОД ПО БАНКА": 11, "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА": 11,
+    "РАЗХОД С ФАКТУРИ": 1, 
+    "РАЗХОД С ФАКТУРИ ПО БАНКА": 11, // Поставяме го в колона Приход по банка
+    "РАЗХОД БЕЗ ФАКТУРИ": 2, 
+    "ЗАПЛАТА/АВАНС": 3,
+    "ПРИХОД БАР МАККУИН": 4, 
+    "ПРИХОД МАККУИН": 5, 
+    "ПРИХОД БАР СЪНСЕТ": 6,
+    "ПРИХОД АНИМАТОР": 7, 
+    "ПРИХОД КАПАРО": 8, 
+    "ДУГИ ПРИХОДИ": 10, 
+    "ПРИХОД ПО БАНКА": 11, 
+    "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА": 11,
     "ПЛАЩАНЕ С КАРТА": 11 
 };
 
 function isBankIncome(opt) {
-    return opt === "ПРИХОД ПО БАНКА" || opt === "ПЛАЩАНЕ С КАРТА";
+    return opt === "ПРИХОД ПО БАНКА" || opt === "ПЛАЩАНЕ С КАРТА" || opt === "РАЗХОД С ФАКТУРИ ПО БАНКА";
 }
 
 function checkForm() {
@@ -332,7 +337,8 @@ function render(results) {
         const dStr = e.get("date"), entryDate = new Date(dStr);
         const opt = e.get("option"), val = e.get("sum") || 0, col = mapping[opt];
 
-        if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" && !isBankIncome(opt)) {
+        // КАСА ЛОГИКА (В БРОЙ)
+        if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" && opt !== "РАЗХОД С ФАКТУРИ ПО БАНКА" && !isBankIncome(opt)) {
             const isCashOut = (opt === "ИЗНЕСЕНИ ОТ КАСА" || [1,2,3].includes(col));
             if (isCashOut) globalCashDisplay -= val; else globalCashDisplay += val;
         }
@@ -344,11 +350,21 @@ function render(results) {
         if(entryDate.getMonth() === m && entryDate.getFullYear() === y) {
             historyTBody.innerHTML += `<tr><td>${entryDate.getDate()}.${entryDate.getMonth()+1}</td><td>${opt}</td><td>${val.toFixed(2)}</td><td>${e.get("notes")||''}</td></tr>`;
             const dIdx = entryDate.getDate() - 1;
-            if(col) monthlyData[dIdx][col] += val;
+            
+            // ЛОГИКА ЗА ТАБЛИЦАТА
+            if(col) {
+                if(opt === "РАЗХОД С ФАКТУРИ ПО БАНКА") {
+                    monthlyData[dIdx][col] -= val; // ИЗВАЖДА се от колона 11
+                } else {
+                    monthlyData[dIdx][col] += val;
+                }
+            }
+            
             if(opt === "ПРИХОД КАПАРО") kaparoNotes[dIdx] += (kaparoNotes[dIdx] ? ", " : "") + (e.get("notes") || "");
 
-            if (col === 4 || col === 6 || (col === 11 && isBankIncome(opt))) incomeForVat += val;
-            if (col === 1) invoicesForVat += val;
+            // ДДС ЛОГИКА
+            if (col === 4 || col === 6 || (col === 11 && (opt === "ПРИХОД ПО БАНКА" || opt === "ПЛАЩАНЕ С КАРТА"))) incomeForVat += val;
+            if (col === 1 || opt === "РАЗХОД С ФАКТУРИ ПО БАНКА") invoicesForVat += val;
         }
     });
 
@@ -360,7 +376,8 @@ function render(results) {
     results.forEach(e => {
         const dStr = e.get("date"), opt = e.get("option"), val = e.get("sum") || 0, col = mapping[opt];
         
-        if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" && !isBankIncome(opt)) {
+        // Текуща каса
+        if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" && opt !== "РАЗХОД С ФАКТУРИ ПО БАНКА" && !isBankIncome(opt)) {
             const isCashOut = (opt === "ИЗНЕСЕНИ ОТ КАСА" || [1,2,3].includes(col));
             if (isCashOut) runningCol12 -= val; else runningCol12 += val;
         }
@@ -368,9 +385,10 @@ function render(results) {
         if (opt === "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" || opt === "ВНЕСЕНИ В КАСА") runningCol13 -= val;
         else if (opt === "ИЗНЕСЕНИ ОТ КАСА") runningCol13 += val;
 
+        // Баланс
         if ([1,2,3,4,5,6,7,8,10,11].includes(col)) {
             if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА") {
-                const isExpense = [1,2,3].includes(col);
+                const isExpense = ([1,2,3].includes(col) || opt === "РАЗХОД С ФАКТУРИ ПО БАНКА");
                 if (isExpense) runningCol14Total -= val; else runningCol14Total += val;
             }
         }
