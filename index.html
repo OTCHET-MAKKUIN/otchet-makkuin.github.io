@@ -487,15 +487,24 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
         document.getElementById('amount_field').value = ''; document.getElementById('notes').value = '';
         setTimeout(() => { status.style.display = 'none'; }, 2000);
         await loadData();
+        setTimeout(scrollToBottom, 100); // Скролва автоматично след нов запис
     } catch(e) { status.textContent = 'Грешка!'; status.className = 'error'; }
     finally { btn.disabled = false; checkForm(); }
 });
-
+function scrollToBottom() {
+    const container = document.querySelector('.history-scroll-container');
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
+}
 function validatePassword() {
     if(document.getElementById('monthlyPassword').value === 'Flamingo3000'){
         document.getElementById('hiddenReportSection').style.display = 'block';
         document.getElementById('passwordPrompt').style.display = 'none';
-        loadData();
+        loadData().then(() => {
+            // Изчакваме малко рендирането и скролваме
+            setTimeout(scrollToBottom, 100); 
+        });
     } else { alert("Грешна парола"); }
 }
 document.getElementById('checkPassword').addEventListener('click', validatePassword);
