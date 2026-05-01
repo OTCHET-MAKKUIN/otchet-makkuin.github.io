@@ -279,7 +279,7 @@ const FIXED_SALARY_BASE = (4 * MRZ_EURO) + (2 * 1020);
 
 const mapping = {
     "РАЗХОД С ФАКТУРИ": 1, 
-    "РАЗХОД С ФАКТУРИ ПО БАНКА": 11, // Поставяме го в колона Приход по банка
+    "РАЗХОД С ФАКТУРИ ПО БАНКА": 11,
     "РАЗХОД БЕЗ ФАКТУРИ": 2, 
     "ЗАПЛАТА/АВАНС": 3,
     "ПРИХОД БАР МАККУИН": 4, 
@@ -352,10 +352,9 @@ function render(results) {
             historyTBody.innerHTML += `<tr><td>${entryDate.getDate()}.${entryDate.getMonth()+1}</td><td>${opt}</td><td>${val.toFixed(2)}</td><td>${e.get("notes")||''}</td></tr>`;
             const dIdx = entryDate.getDate() - 1;
             
-            // ЛОГИКА ЗА ТАБЛИЦАТА
             if(col) {
                 if(opt === "РАЗХОД С ФАКТУРИ ПО БАНКА") {
-                    monthlyData[dIdx][col] -= val; // ИЗВАЖДА се от колона 11
+                    monthlyData[dIdx][col] -= val;
                 } else {
                     monthlyData[dIdx][col] += val;
                 }
@@ -371,28 +370,45 @@ function render(results) {
 
     document.getElementById('currentCash').textContent = globalCashDisplay.toFixed(2) + ' €';
 
-    let runningCol12 = 0, runningCol13 = 0, runningCol14Total = 0;
-    let dailyCol12 = {}, dailyCol13 = {}, dailyCol14Cumulative = {};
+    // КУМУЛАТИВНИ САЛДА (Прехвърляне между месеци)
+    let runningCol11 = 0; // ПРИХОД ПО БАНКА
+    let runningCol12 = 0; // ТЕКУЩА КАСА
+    let runningCol13 = 0; // КАСА НАЛИЧНОСТ
+    let runningCol14Total = 0; // ТЕКУЩ БАЛАНС
+    
+    let dailyCol11 = {}; 
+    let dailyCol12 = {}; 
+    let dailyCol13 = {};
+    let dailyCol14Cumulative = {};
 
     results.forEach(e => {
         const dStr = e.get("date"), opt = e.get("option"), val = e.get("sum") || 0, col = mapping[opt];
         
-        // Текуща каса
+        // Салдо Приход по Банка (Колона 11)
+        if (col === 11) {
+            if (opt === "РАЗХОД С ФАКТУРИ ПО БАНКА") runningCol11 -= val;
+            else runningCol11 += val;
+        }
+
+        // Салдо Текуща Каса
         if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" && opt !== "РАЗХОД С ФАКТУРИ ПО БАНКА" && !isBankIncome(opt)) {
             const isCashOut = (opt === "ИЗНЕСЕНИ ОТ КАСА" || [1,2,3].includes(col));
             if (isCashOut) runningCol12 -= val; else runningCol12 += val;
         }
 
+        // Салдо Каса Наличност
         if (opt === "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" || opt === "ВНЕСЕНИ В КАСА") runningCol13 -= val;
         else if (opt === "ИЗНЕСЕНИ ОТ КАСА") runningCol13 += val;
 
-        // Баланс
+        // Салдо Текущ Баланс
         if ([1,2,3,4,5,6,7,8,10,11].includes(col)) {
             if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА") {
                 const isExpense = ([1,2,3].includes(col) || opt === "РАЗХОД С ФАКТУРИ ПО БАНКА");
                 if (isExpense) runningCol14Total -= val; else runningCol14Total += val;
             }
         }
+
+        dailyCol11[dStr] = runningCol11;
         dailyCol12[dStr] = runningCol12;
         dailyCol13[dStr] = runningCol13;
         dailyCol14Cumulative[dStr] = runningCol14Total;
@@ -401,11 +417,14 @@ function render(results) {
     const mBody = document.getElementById('monthlyBody');
     mBody.innerHTML = '';
     let colTotals = new Array(15).fill(0);
-    let l12 = 0, l13 = 0;
+    
+    // Начални салда за месеца
+    let l11 = 0, l12 = 0, l13 = 0;
     const startOfViewStr = `${y}-${String(m+1).padStart(2,'0')}-01`;
     
     results.forEach(e => { 
         if(e.get("date") < startOfViewStr) {
+            l11 = dailyCol11[e.get("date")] || 0;
             l12 = dailyCol12[e.get("date")] || 0;
             l13 = dailyCol13[e.get("date")] || 0;
         }
@@ -413,6 +432,7 @@ function render(results) {
 
     for(let i=1; i<=daysInMonth; i++) {
         const currentDayStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+        if (dailyCol11[currentDayStr] !== undefined) l11 = dailyCol11[currentDayStr];
         if (dailyCol12[currentDayStr] !== undefined) l12 = dailyCol12[currentDayStr];
         if (dailyCol13[currentDayStr] !== undefined) l13 = dailyCol13[currentDayStr];
 
@@ -425,6 +445,10 @@ function render(results) {
             const td = document.createElement('td');
             if(j===0) { td.textContent = `${i}.${m+1}`; td.className = 'date-col'; }
             else if(j===9) { td.textContent = kaparoNotes[i-1]; td.className = 'text-col'; }
+            else if(j===11) {
+                td.textContent = l11.toFixed(2);
+                td.className = 'income-col has-val';
+            }
             else if(j===12) { td.textContent = l12.toFixed(2); td.className='balance-col has-val'; }
             else if(j===13) { td.textContent = l13.toFixed(2); td.className='cash-col has-val'; }
             else if(j===14) { 
@@ -437,9 +461,10 @@ function render(results) {
                 let v = monthlyData[i-1][j];
                 if(v !== 0) { td.textContent = v.toFixed(2); td.classList.add('has-val'); colTotals[j] += v; }
             }
-            if(j !== 9 && j < 12) {
+            
+            if(j !== 9 && j < 11) {
                 if([1,2,3].includes(j)) td.classList.add('expense-col');
-                if([4,5,6,7,8,10,11].includes(j)) td.classList.add('income-col');
+                if([4,5,6,7,8,10].includes(j)) td.classList.add('income-col');
             }
             row.appendChild(td);
         }
@@ -457,9 +482,11 @@ function render(results) {
     for(let j=0; j<15; j++) {
         const td = document.createElement('td');
         if(j===0) td.textContent = "ОБЩО:";
+        else if(j===11) td.textContent = l11.toFixed(2);
         else if(j===12) td.textContent = l12.toFixed(2);
         else if(j===13) td.textContent = l13.toFixed(2);
         else if(j===14) td.textContent = bestBalance.toFixed(2);
+        else if(j===9) { td.textContent = ""; }
         else { td.textContent = colTotals[j].toFixed(2); if(colTotals[j]!==0) td.classList.add('has-val'); }
         fRow.appendChild(td);
     }
@@ -488,22 +515,19 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
         document.getElementById('amount_field').value = ''; document.getElementById('notes').value = '';
         setTimeout(() => { status.style.display = 'none'; }, 2000);
         await loadData();
-        setTimeout(scrollToBottom, 100); // Скролва автоматично след нов запис
+        setTimeout(scrollToBottom, 100);
     } catch(e) { status.textContent = 'Грешка!'; status.className = 'error'; }
     finally { btn.disabled = false; checkForm(); }
 });
 function scrollToBottom() {
     const container = document.querySelector('.history-scroll-container');
-    if (container) {
-        container.scrollTop = container.scrollHeight;
-    }
+    if (container) container.scrollTop = container.scrollHeight;
 }
 function validatePassword() {
     if(document.getElementById('monthlyPassword').value === 'Flamingo3000'){
         document.getElementById('hiddenReportSection').style.display = 'block';
         document.getElementById('passwordPrompt').style.display = 'none';
         loadData().then(() => {
-            // Изчакваме малко рендирането и скролваме
             setTimeout(scrollToBottom, 100); 
         });
     } else { alert("Грешна парола"); }
