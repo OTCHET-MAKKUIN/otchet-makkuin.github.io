@@ -365,8 +365,13 @@ function render(results) {
             
             if(opt === "ПРИХОД КАПАРО") kaparoNotes[dIdx] += (kaparoNotes[dIdx] ? ", " : "") + (e.get("notes") || "");
 
-            // ДДС ЛОГИКА - Само за текущия разглеждан месец
-            if (col === 4 || col === 6 || (col === 11 && (opt === "ПРИХОД ПО БАНКА" || opt === "ПЛАЩАНЕ С КАРТА"))) incomeForVat += val;
+            // ДДС ЛОГИКА - Включваме всички приходни колони за по-прецизен отчет
+            if ([4, 5, 6, 7, 8, 10, 11].includes(col)) {
+                // Изключваме трансфери и захранвания от данъчната база
+                if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" && opt !== "ВНЕСЕНИ В КАСА" && opt !== "ИЗНЕСЕНИ ОТ КАСА") {
+                    incomeForVat += val;
+                }
+            }
             if (col === 1 || opt === "РАЗХОД С ФАКТУРИ ПО БАНКА") invoicesForVat += val;
         }
     });
@@ -491,25 +496,37 @@ function render(results) {
     document.getElementById('monthlyFoot').innerHTML = '';
     document.getElementById('monthlyFoot').appendChild(fRow);
 
-    // ПРЕДПАЗНА МЯРКА ЗА ДДС: Зануляваме напълно, ако няма приходи за месеца
+    // ПРЕЦИЗНО ИЗЧИСЛЯВАНЕ НА ДДС
     let vatOnIncome = 0;
     let vatOnExpense = 0;
     let finalVat = 0;
 
-    // Смятаме само ако има реализиран приход, за да не излиза "минус" от заплатите в началото на месеца
-    if (hasRecordsForThisMonth && incomeForVat > 0) {
+    if (hasRecordsForThisMonth) {
         vatOnIncome = incomeForVat / 6;
         vatOnExpense = (invoicesForVat + FIXED_SALARY_BASE) / 6;
         finalVat = vatOnIncome - vatOnExpense;
     }
     
-    // Ако разходите са повече от приходите, ДДС за внасяне е 0 (не показваме минус)
-    if (finalVat < 0) finalVat = 0;
+    // Ако крайният резултат е отрицателен, показваме 0.00, но описваме кредита
+    let displayVat = Math.max(0, finalVat);
+    let creditAmount = Math.abs(Math.min(0, finalVat));
     
-    document.getElementById('monthlyVat').textContent = finalVat.toFixed(2) + ' €';
-    document.getElementById('vatFormulaText').innerHTML = (hasRecordsForThisMonth && incomeForVat > 0) ? 
-        `<strong>Приход (ДДС):</strong> ${vatOnIncome.toFixed(2)}€<br><strong>Разход (ДДС):</strong> ${vatOnExpense.toFixed(2)}€<br><small>(4x${MRZ_EURO}€ + 2x1020€ + Фактури)</small>` :
-        `Няма реализиран приход за изчисляване на ДДС за избрания месец.`;
+    document.getElementById('monthlyVat').textContent = displayVat.toFixed(2) + ' €';
+    
+    let subtext = "";
+    if (!hasRecordsForThisMonth) {
+        subtext = "Няма записи за избрания месец.";
+    } else {
+        subtext = `<strong>Приход (ДДС):</strong> ${vatOnIncome.toFixed(2)}€<br>` +
+                  `<strong>Разход (ДДС):</strong> ${vatOnExpense.toFixed(2)}€<br>`;
+        if (finalVat < 0) {
+            subtext += `<span style="color:#2e7d32; font-weight:bold;">Текущ кредит за приспадане: ${creditAmount.toFixed(2)}€</span>`;
+        } else {
+            subtext += `<span style="color:#d32f2f; font-weight:bold;">ДДС за внасяне: ${finalVat.toFixed(2)}€</span>`;
+        }
+    }
+    
+    document.getElementById('vatFormulaText').innerHTML = subtext;
 }
 
 document.getElementById('submitBtn').addEventListener('click', async () => {
