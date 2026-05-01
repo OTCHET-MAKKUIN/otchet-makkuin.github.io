@@ -324,8 +324,10 @@ function render(results) {
     let monthlyData = Array.from({length: daysInMonth}, () => new Array(15).fill(0));
     let kaparoNotes = new Array(daysInMonth).fill("");
     
+    // Тези променливи се зануляват при всяко извикване на render (смяна на месец)
     let incomeForVat = 0;
     let invoicesForVat = 0;
+    let hasRecordsForThisMonth = false;
 
     const currentTBody = document.querySelector('#currentTable tbody');
     const historyTBody = document.getElementById('historyBody');
@@ -338,7 +340,7 @@ function render(results) {
         const dStr = e.get("date"), entryDate = new Date(dStr);
         const opt = e.get("option"), val = e.get("sum") || 0, col = mapping[opt];
 
-        // КАСА ЛОГИКА (В БРОЙ)
+        // КАСА ЛОГИКА (В БРОЙ) - Кумулативно за всички времена
         if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" && opt !== "РАЗХОД С ФАКТУРИ ПО БАНКА" && !isBankIncome(opt)) {
             const isCashOut = (opt === "ИЗНЕСЕНИ ОТ КАСА" || [1,2,3].includes(col));
             if (isCashOut) globalCashDisplay -= val; else globalCashDisplay += val;
@@ -348,7 +350,9 @@ function render(results) {
             currentTBody.innerHTML += `<tr><td>${entryDate.getDate()}.${entryDate.getMonth()+1}</td><td>${opt}</td><td>${val.toFixed(2)}</td><td>${e.get("notes")||''}</td></tr>`;
         }
 
+        // Логика само за избрания месец
         if(entryDate.getMonth() === m && entryDate.getFullYear() === y) {
+            hasRecordsForThisMonth = true;
             historyTBody.innerHTML += `<tr><td>${entryDate.getDate()}.${entryDate.getMonth()+1}</td><td>${opt}</td><td>${val.toFixed(2)}</td><td>${e.get("notes")||''}</td></tr>`;
             const dIdx = entryDate.getDate() - 1;
             
@@ -362,7 +366,7 @@ function render(results) {
             
             if(opt === "ПРИХОД КАПАРО") kaparoNotes[dIdx] += (kaparoNotes[dIdx] ? ", " : "") + (e.get("notes") || "");
 
-            // ДДС ЛОГИКА
+            // ДДС ЛОГИКА - Само за текущия разглеждан месец
             if (col === 4 || col === 6 || (col === 11 && (opt === "ПРИХОД ПО БАНКА" || opt === "ПЛАЩАНЕ С КАРТА"))) incomeForVat += val;
             if (col === 1 || opt === "РАЗХОД С ФАКТУРИ ПО БАНКА") invoicesForVat += val;
         }
@@ -384,23 +388,19 @@ function render(results) {
     results.forEach(e => {
         const dStr = e.get("date"), opt = e.get("option"), val = e.get("sum") || 0, col = mapping[opt];
         
-        // Салдо Приход по Банка (Колона 11)
         if (col === 11) {
             if (opt === "РАЗХОД С ФАКТУРИ ПО БАНКА") runningCol11 -= val;
             else runningCol11 += val;
         }
 
-        // Салдо Текуща Каса
         if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" && opt !== "РАЗХОД С ФАКТУРИ ПО БАНКА" && !isBankIncome(opt)) {
             const isCashOut = (opt === "ИЗНЕСЕНИ ОТ КАСА" || [1,2,3].includes(col));
             if (isCashOut) runningCol12 -= val; else runningCol12 += val;
         }
 
-        // Салдо Каса Наличност
         if (opt === "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА" || opt === "ВНЕСЕНИ В КАСА") runningCol13 -= val;
         else if (opt === "ИЗНЕСЕНИ ОТ КАСА") runningCol13 += val;
 
-        // Салдо Текущ Баланс
         if ([1,2,3,4,5,6,7,8,10,11].includes(col)) {
             if (opt !== "ЗАХРАНВАНЕ НА БАНКОВА СМЕТКА") {
                 const isExpense = ([1,2,3].includes(col) || opt === "РАЗХОД С ФАКТУРИ ПО БАНКА");
@@ -418,7 +418,6 @@ function render(results) {
     mBody.innerHTML = '';
     let colTotals = new Array(15).fill(0);
     
-    // Начални салда за месеца
     let l11 = 0, l12 = 0, l13 = 0;
     const startOfViewStr = `${y}-${String(m+1).padStart(2,'0')}-01`;
     
@@ -493,10 +492,22 @@ function render(results) {
     document.getElementById('monthlyFoot').innerHTML = '';
     document.getElementById('monthlyFoot').appendChild(fRow);
 
-    let vatOnIncome = incomeForVat / 6, vatOnExpense = (invoicesForVat + FIXED_SALARY_BASE) / 6;
-    let finalVat = vatOnIncome - vatOnExpense;
+    // ПОПРАВКА ЗА ДДС: Ако няма записи за месеца, ДДС-то се занулява напълно (0.00).
+    // Ако има записи, се изчислява по формулата.
+    let vatOnIncome = 0;
+    let vatOnExpense = 0;
+    let finalVat = 0;
+
+    if (hasRecordsForThisMonth) {
+        vatOnIncome = incomeForVat / 6;
+        vatOnExpense = (invoicesForVat + FIXED_SALARY_BASE) / 6;
+        finalVat = vatOnIncome - vatOnExpense;
+    }
+    
     document.getElementById('monthlyVat').textContent = finalVat.toFixed(2) + ' €';
-    document.getElementById('vatFormulaText').innerHTML = `<strong>Приход (ДДС):</strong> ${vatOnIncome.toFixed(2)}€<br><strong>Разход (ДДС):</strong> ${vatOnExpense.toFixed(2)}€<br><small>(4x${MRZ_EURO}€ + 2x1020€ + Фактури)</small>`;
+    document.getElementById('vatFormulaText').innerHTML = hasRecordsForThisMonth ? 
+        `<strong>Приход (ДДС):</strong> ${vatOnIncome.toFixed(2)}€<br><strong>Разход (ДДС):</strong> ${vatOnExpense.toFixed(2)}€<br><small>(4x${MRZ_EURO}€ + 2x1020€ + Фактури)</small>` :
+        `Няма записи за избрания месец.`;
 }
 
 document.getElementById('submitBtn').addEventListener('click', async () => {
